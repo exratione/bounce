@@ -1,35 +1,5 @@
 <?php
 
-// TODO:
-
-// 3) test code + testing
-// - actual mail/processing/etc testing with new connector class
-
-//    - the lower part-getting code needs testing/debugging in the handler; clearly I'm not writing the harness correctly
-//    - so extend further the test class for the connector, add in more of the parent class functions
-
-// - then full-on test of cron with fake account + test connector
-// - how to test the features thing?
-
-// 4) try things out with testaccount@exratione.com mailbox and use that to check see what mails look like
-
-
-// 5) redo/finish up docs
-
-// 9) adding token ability to the admin settings for notices for users (how?)
-//      - note that web tests for the notices would have to change to get tokens put back in
-//      - apparently general tokens are in core: http://drupal.org/node/113614
-
-// 10) ajaxifying the checkboxes for notices on the admin settings page, to hide/show the textboxes
-//      - see if #states in the form api will work sufficiently well for that
-
-
-// 28) test the size limit for mail parts
-//     - testing with actual size
-  
-
-// 29) need an admin page view for all non-delivery reports
-
 /**
  * The default maximum number of email non-delivery reports to pull from a server
  * in a single connection session.

@@ -993,7 +993,6 @@ class BounceTestCase extends DrupalWebTestCase {
 
     $reports = bounce_connect();
     
-    $this->error(',,,,,'.print_r($reports, true));
     $this->assertIdentical(count($reports), 1);
     
   }
