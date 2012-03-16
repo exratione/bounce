@@ -1,0 +1,642 @@
+<?php
+
+// TODO:
+
+// 3) test code + testing
+// - actual mail/processing/etc testing with new connector class
+
+//    - the lower part-getting code needs testing/debugging in the handler; clearly I'm not writing the harness correctly
+//    - so extend further the test class for the connector, add in more of the parent class functions
+
+// - then full-on test of cron with fake account + test connector
+// - how to test the features thing?
+
+// 4) try things out with testaccount@exratione.com mailbox and use that to check see what mails look like
+
+
+// 5) redo/finish up docs
+
+// 9) adding token ability to the admin settings for notices for users (how?)
+//      - note that web tests for the notices would have to change to get tokens put back in
+//      - apparently general tokens are in core: http://drupal.org/node/113614
+
+// 10) ajaxifying the checkboxes for notices on the admin settings page, to hide/show the textboxes
+//      - see if #states in the form api will work sufficiently well for that
+
+
+// 28) test the size limit for mail parts
+//     - testing with actual size
+  
+
+// 29) need an admin page view for all non-delivery reports
+
+/**
+ * The default maximum number of email non-delivery reports to pull from a server
+ * in a single connection session.
+ */
+define('BOUNCE_DEFAULT_MAX_REPORTS_PER_SESSION', 50);
+
+/**
+ * A short default timeout in seconds for the mail server connector.
+ */
+define('BOUNCE_DEFAULT_CONNECTION_TIMEOUT', 5);
+
+/**
+ * Default value for the largest attachment size to consider when retrieving mail parts.
+ */
+define('BOUNCE_DEFAULT_MAIL_PART_SIZE_LIMIT_BYTES', 20480);
+
+/**
+ * The score needed to stop sending emails to an address.
+ */
+define('BOUNCE_DEFAULT_BLOCKER_THRESHOLD_SCORE', 50);
+
+/**
+ * The default age at which non-delivery report records are cleared out from the database.
+ */
+define('BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS', 100);
+
+/**
+ * The default age at which sent mail records are cleared out from the database.
+ * (i.e. how long a non-delivery report has to show up to be considered).
+ */
+define('BOUNCE_DEFAULT_MAX_SENT_AGE_DAYS', 10);
+
+/**
+ * The default connector definition used to connect to mail servers.
+ */
+define('BOUNCE_DEFAULT_CONNECTOR', 'default');
+
+/**
+ * The default analyst definition used to process non-delivery reports.
+ */
+define('BOUNCE_DEFAULT_ANALYST', 'default');
+
+/**
+ * The default blocker definition used to determine which mails to block.
+ */
+define('BOUNCE_DEFAULT_BLOCKER', 'default');
+
+/**
+ * The key for the ID inserted into the headers of outgoing mail.
+ */
+define('BOUNCE_MAIL_HEADER_ID_KEY', 'x-bounce-identifier');
+
+/**
+ * Indicates that a non-delivery report has not been used to block an email address. It can therefore be used
+ * as a part of considering whether to block an email or deleted if too old.
+ */
+define('BOUNCE_NDR_STATUS_UNUSED', 0);
+
+/**
+ * Indicates that a non-delivery report has been used to block an email address. It should not be used
+ * as a part of considering whether to (re)block an email and only deleted if the email address is no
+ * longer blocked.
+ */
+define('BOUNCE_NDR_STATUS_USED', 1);
+
+/**
+ * Implements hook_hook_info().
+ * 
+ * Tell Drupal which include files contain the various hook implementations in this module.
+ */
+function bounce_hook_info() {
+  $hooks = array();
+  
+  // Bounce module defined hooks in bounce.api.inc
+  $hooks['bounce_code_type'] = array(
+    'group' => 'api',
+  );
+  $hooks['bounce_connector'] = array(
+    'group' => 'api',
+  );
+  $hooks['bounce_connector_alter'] = array(
+    'group' => 'api',
+  );
+  $hooks['bounce_analyst'] = array(
+    'group' => 'api',
+  );
+  $hooks['bounce_analyst_alter'] = array(
+    'group' => 'api',
+  );
+  $hooks['bounce_blocker'] = array(
+    'group' => 'api',
+  );
+  $hooks['bounce_blocker_alter'] = array(
+    'group' => 'api',
+  );
+  
+  // cron hooks in bounce.cron.inc
+  $hooks['cron'] = array(
+    'group' => 'cron',
+  );
+  $hooks['cron_queue_info'] = array(
+    'group' => 'cron',
+  );
+    
+  // features hooks in bounce.features.inc
+  $hook['features_api'] = array(
+    'group' => 'features',
+  );
+  
+  // mail hooks in bounce.mail.inc
+  $hook['mail_alter'] = array(
+    'group' => 'mail',
+  );
+  
+  // user and user activity hooks in bounce.user.inc
+  $hooks['form_user_pass_alter'] = array(
+    'group' => 'user',
+  );
+  $hooks['form_user_register_form_alter'] = array(
+    'group' => 'user',
+  );
+  $hooks['user_load'] = array(
+    'group' => 'user',
+  );
+  $hooks['user_login'] = array(
+    'group' => 'user',
+  );
+
+  return $hooks;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function bounce_menu() {
+  $items = array();
+  // list of blocked email addresses, which is also the default local task
+  $items['admin/config/people/bounce'] = array(
+    'title' => 'Blocked emails and email non-delivery reports',
+    'description' => 'Administer blocked email addresses and settings for non-delivery report processing.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bounce_admin_blocked'),
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+  );  
+  $items['admin/config/people/bounce/blocked'] = array(
+    'title' => 'Blocked Mails',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'weight' => 1,
+  ); 
+  
+  // view non-delivery reports for a particular blocked email address
+  $items['admin/config/people/bounce/blocked/%bounce_blocked_mail'] = array(
+    'title' => 'View non-delivery reports',
+    'description' => 'View a list of non-delivery reports for a blocked mail.',
+    'page callback' => 'bounce_admin_view_blocked_mail',
+    'page arguments' => array(5),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+  );
+  
+  // callback for the data for a particular non-delivery report; the % in there will be nojs or ajax
+  $items['admin/config/people/bounce/ndr/%/%bounce_non_delivery_report'] = array(
+    'title' => 'View a non-delivery report',
+    'description' => 'View a specific non-delivery report.',
+    'page callback' => 'bounce_admin_view_non_delivery_report',
+    'page arguments' => array(5, 6),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+  );  
+  
+  // general settings page 
+  $items['admin/config/people/bounce/settings'] = array(
+    'title' => 'General Settings',
+    'description' => 'Configure the handling of non-delivery reports generated by bounced emails.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bounce_admin_settings'),
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+    'weight' => 5,
+  ); 
+  
+  // settings page for the selected mail server connector component
+  $items['admin/config/people/bounce/connector'] = array(
+    'title' => 'Connector',
+    'description' => 'Administer connector settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bounce_admin_component_configuration', 'connector', BOUNCE_DEFAULT_CONNECTOR),
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+    'weight' => 10,
+  );  
+  
+  // settings page for the selected non-delivery report analyst component
+  $items['admin/config/people/bounce/analyst'] = array(
+    'title' => 'Analyst',
+    'description' => 'Administer non-delivery report analyst settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bounce_admin_component_configuration', 'analyst', BOUNCE_DEFAULT_ANALYST),
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+    'weight' => 15,
+  );  
+  
+  // settings page for the selected blocker component
+  $items['admin/config/people/bounce/blocker'] = array(
+    'title' => 'Blocker Settings',
+    'description' => 'Configure mail blocker settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bounce_admin_component_configuration', 'blocker', BOUNCE_DEFAULT_BLOCKER),
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+    'weight' => 20,
+  );  
+  
+  // The default blocker component adds extra configuration pages in addition to
+  // its normal form callback page for component settings above. If a different
+  // blocker component is used, then these pages won't be enabled.
+  $blocker = variable_get('bounce_blocker', BOUNCE_DEFAULT_BLOCKER); 
+  if ($blocker == BOUNCE_DEFAULT_BLOCKER) {
+    
+    // a list of scores assigned to specific non-delivery codes
+    $items['admin/config/people/bounce/scoring'] = array(
+      'title' => 'Blocker Scoring',
+      'description' => 'Configure scoring of non-delivery reports by code.',
+      'page callback' => 'bounce_admin_scoring',
+      'type' => MENU_LOCAL_TASK,
+      'access arguments' => array('administer email non-delivery report processing'),
+      'file' => 'bounce.blocker.inc',
+      'weight' => 25,
+    );   
+    
+    // a form to add a new code-score relationship
+    $items['admin/config/people/bounce/scoring/add'] = array(
+      'title' => 'Add code',
+      'description' => 'Add a new non-delivery report code and scoring.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('bounce_admin_edit_code'),
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('administer email non-delivery report processing'),
+      'file' => 'bounce.blocker.inc',
+    ); 
+    
+    // a form to edit an existing code-score relationship
+    $items['admin/config/people/bounce/scoring/%bounce_code/edit'] = array(
+      'title' => 'Edit code',
+      'description' => 'Edit scoring of a non-delivery report code.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('bounce_admin_edit_code', 5),
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('administer email non-delivery report processing'),
+      'file' => 'bounce.blocker.inc',
+    ); 
+    
+    // a form to delete an existing code-score relationship
+    $items['admin/config/people/bounce/scoring/%bounce_code/delete'] = array(
+      'title' => 'Delete code',
+      'description' => 'Delete scoring for a non-delivery report code.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('bounce_admin_delete_code', 5),
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('administer email non-delivery report processing'),
+      'file' => 'bounce.blocker.inc',
+    ); 
+  }
+  return $items;
+}
+
+/**
+ * Autoloader for the %bounce_code wildcard. Returns a row from bounce_code_score.
+ */
+function bounce_code_load($code) {
+  return db_select('bounce_code_score', 'cs')
+    ->fields('cs', array('code', 'type', 'score', 'description'))
+    ->condition('code', $code, '=')
+    ->execute()
+    ->fetchAssoc();
+}
+
+/**
+ * Autoloader for the %bounce_blocked_mail wildcard. Returns a row from bounce_blocked.
+ */
+function bounce_blocked_mail_load($blocked_id) {
+  return db_select('bounce_blocked', 'b')
+    ->fields('b', array('blocked_id', 'mail', 'created'))
+    ->condition('blocked_id', $blocked_id, '=')
+    ->execute()
+    ->fetchAssoc();
+}
+
+/**
+ * Autoloader for the %bounce_ndr wildcard. Returns a row from bounce_non_delivery_report.
+ */
+function bounce_non_delivery_report_load($report_id) {
+  $report =  db_select('bounce_non_delivery_report', 'ndr')
+    ->fields('ndr', array('report_id', 'mail', 'code', 'module', 'report', 'status', 'created'))
+    ->condition('report_id', $report_id, '=')
+    ->execute()
+    ->fetchAssoc();
+  if($report) {
+    $report['report'] = unserialize($report['report']);
+  }
+  return $report;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function bounce_permission() {
+  return array(
+    'administer email non-delivery report processing' => array(
+      'title' => t('Administer email non-delivery report processing'), 
+      'description' => t('Perform administration tasks relating to handling of non-delivery reports generated by bounced emails.'),
+    ),
+  );
+}
+
+/**
+ * Cron queue callback. Connect to a mail server account and retrieve the non-delivery report emails therein.
+ * Add the emails to the non-delivery report processing queue, and delete them from the server.
+ */
+function bounce_process_connection_queue_item($item) {   
+  // obtain the connector
+  $connector = variable_get('bounce_connector', BOUNCE_DEFAULT_CONNECTOR);
+  $connectors = bounce_component_definitions('connector');
+  bounce_component_include($connectors[$connector]);
+
+  // check to see that the connector is configured
+  if (call_user_func($connectors[$connector]['configured_check_callback']) != TRUE) {
+    return;
+  }
+
+  // obtain a set of non-delivery report emails from the mail server via the connector
+  $reports = call_user_func($connectors[$connector]['reports_callback']);
+  
+  // add the non-delivery reports to the queue for processing, if we have any
+  if ($reports && is_array($reports)) {
+    watchdog('bounce', 'Retrieved @count potential non-delivery reports from the Return-Path account.', array('@count' => count($reports)), WATCHDOG_INFO);
+    $queue = DrupalQueue::get('bounce_non_delivery_report');
+    foreach ($reports as $report) {
+      $queue->createItem($report);
+    }
+    // Add another connection to the server to the queue, since we limit
+    // how many reports are taken from the server in a single connection.
+    // There may still be more non-delivery report emails in the account.
+    $queue = DrupalQueue::get('bounce_connection');
+    
+    
+    // HACK
+    //$queue->createItem(array());
+  }
+}
+
+/**
+ * Cron queue callback. Process a single non-delivery report email.
+ * 
+ * The $report parameter must be an indexed array of message parts, each of 
+ * which is a subarray with at least 'charset' and 'data' keys.
+ * 
+ * $report = array(
+ *  [0] => array(
+ *    ['data'] => string
+ *    ['charset'] => the encoding of the string
+ *  ),
+ *  [1] => ...
+ * )
+ * 
+ * The message parts should be in the order they occurred in the email, and not include the
+ * non-delivery report mail headers.
+ * 
+ * @param array $report the non-delivery report email data
+ */
+function bounce_process_non_delivery_report_queue_item($report) {  
+  // obtain the connector
+  $analyst = variable_get('bounce_analyst', BOUNCE_DEFAULT_ANALYST);
+  $analysts = bounce_analysts();
+  bounce_component_include($analysts[$analyst]);
+  
+  // check to see that the connector is configured
+  if (call_user_func($analysts[$analyst]['configured_check_callback']) != TRUE) {
+    return;
+  }
+  
+  // pass in the report and obtain an analysis in return.
+  $analysis = call_user_func($analysts[$analyst]['analysis_callback'], $report);
+  // run it through hook alter
+  drupal_alter('bounce_analysis', $analysis, $report);
+  // record the result if it merits recording
+  bounce_include('analysis');
+  if (bounce_is_complete_non_delivery_report_analysis($analysis)) {
+    bounce_record_non_delivery_report_analysis($analysis, $analyst['module'], $report);
+  }
+}
+
+/**
+ * Loads an include file in the include folder for this module.
+ *
+ * @param string $include the identifier for the file
+ */
+function bounce_include($include) {
+  module_load_include('inc', 'bounce', 'bounce.' . $include);
+}
+
+/**
+ * Helper function to return a list of component definitions.
+ * 
+ * @param string $type the component type (e.g. blocker, connector, analyst)
+ */
+function bounce_component_definitions($type) {
+  $components = &drupal_static(__FUNCTION__ . $type);
+  if (!isset($components)) {
+    $components = array();
+    $modules = module_implements('bounce_' . $type);
+    foreach ($modules as $module) {
+      $defined = module_invoke($module, 'bounce_' . $type);
+      foreach ($defined as $name => $definition) {
+        $components[$name] = $definition;
+        $components[$name]['module'] = $module;
+      }
+    }
+    drupal_alter('bounce_' . $type, $components);
+    $check_function = 'bounce_is_valid_' . $type;
+    foreach ($components as $name => $definition) {
+      if(!call_user_func($check_function, $definition)) {
+        unset($components[$name]);
+      }
+    } 
+  }
+  return $components;
+}
+
+/**
+ * Validate a blocker component definition.
+ * 
+ * @param array $blocker a blocker definition
+ * @return bool TRUE if valid, FALSE if not
+ */
+function bounce_is_valid_blocker($blocker) {
+  $blocker += array(
+    'title' => '',
+    'blocked_callback' => '',
+    'settings_callback' => '',
+    'configured_check_callback' => '',
+    'file' => NULL,
+    'module' => 'bounce',
+  );
+  if (!$blocker['title'] || !$blocker['blocked_callback'] || !$blocker['settings_callback'] || !$blocker['configured_check_callback']) {
+    return FALSE;
+  }
+  bounce_component_include($blocker);
+  if (!function_exists($blocker['blocked_callback']) || !function_exists($blocker['settings_callback']) || !function_exists($blocker['configured_check_callback'])) {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+/**
+ * Validate an analyst component definition.
+ * 
+ * @param array $analyst an analyst definition
+ * @return bool TRUE if valid, FALSE if not
+ */
+function bounce_is_valid_analyst($analyst) {
+  $analyst += array(
+    'title' => '',
+    'analysis_callback' => '',
+    'settings_callback' => '',
+    'configured_check_callback' => '',
+    'file' => NULL,
+    'module' => 'bounce',
+  );
+  if (!$analyst['title'] || !$analyst['analysis_callback'] || !$analyst['settings_callback'] || !$analyst['configured_check_callback']) {
+    return FALSE;
+  }
+  bounce_component_include($analyst);
+  if (!function_exists($analyst['analysis_callback']) || !function_exists($analyst['settings_callback']) || !function_exists($analyst['configured_check_callback'])) {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+/**
+ * Validate a mailserver connector definition.
+ * 
+ * @param array $connector a connector definition
+ * @return bool TRUE if valid, FALSE if not
+ */
+function bounce_is_valid_connector($connector) {
+  $connector += array(
+    'title' => '',
+    'reports_callback' => '',
+    'settings_callback' => '',
+    'configured_check_callback' => '',
+    'file' => NULL,
+    'module' => 'bounce',
+  );
+  if (!$connector['title'] || !$connector['reports_callback'] || !$connector['settings_callback'] || !$connector['configured_check_callback']) {
+    return FALSE;
+  }
+  bounce_component_include($connector);
+  if (!function_exists($connector['reports_callback']) || !function_exists($connector['settings_callback']) || !function_exists($connector['configured_check_callback'])) {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+/**
+ * Load an include file for a component defined via a hook, i.e. that has both a 'file'
+ * key and 'module' key in its definition array.
+ * 
+ * @param array $component a component definition
+ */
+function bounce_component_include($component) {
+  if (isset($component['file']) && $component['file'] && isset($component['module']) && $component['module']) {
+    $file = './' . drupal_get_path('module', $component['module']) . '/' . $component['file'];
+    if (is_file($file)) {
+      require_once $file;
+    }
+  } 
+}
+
+/**
+ * Helper function to parse out distinct emails from text.
+ * 
+ * @param string text a string that may contain emails
+ * @return array an array listing the distinct emails matched, with no duplicates.
+ */
+function _bounce_unique_mails_from_text($text) {
+   return array_values(array_unique(_bounce_mails_from_text($text)));
+}
+
+/**
+ * Helper function to parse out emails from text.
+ * 
+ * @param string text a string that may contain emails
+ * @return array an array of all the emails matched, which may include duplicates.
+ */
+function _bounce_mails_from_text($text) {
+   $matches = array();
+   preg_match_all("/([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})/i", $text, $matches);
+   $mails = $matches[1];
+   foreach ($mails as $index => $mail) {
+     if (!valid_email_address($mail)) {
+       unset($mails[$index]);
+     }
+   }
+   return $mails;
+}
+
+/**
+ * Generate a UUID, from: http://www.php.net/manual/en/function.uniqid.php#94959
+ * 
+ * @return string a UUID.
+ */
+function _bounce_generate_uuid() {
+  $uuid = sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+    // 32 bits for "time_low"
+    mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),
+    // 16 bits for "time_mid"
+    mt_rand( 0, 0xffff ),
+    // 16 bits for "time_hi_and_version",
+    // four most significant bits holds version number 4
+    mt_rand( 0, 0x0fff ) | 0x4000,
+    // 16 bits, 8 bits for "clk_seq_hi_res",
+    // 8 bits for "clk_seq_low",
+    // two most significant bits holds zero and one for variant DCE1.1
+    mt_rand( 0, 0x3fff ) | 0x8000,
+    // 48 bits for "node"
+    mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
+  );
+  // trivial replacements to avoid rare issues with parsing responses for SMTP response codes.   
+  $uuid = str_replace('4', '!', $uuid);
+  $uuid = str_replace('5', '?', $uuid);
+  return $uuid; 
+}
+
+/**
+ * Implements hook_preprocess_page().
+ * 
+ * Deliver messages to users who are blocked when they visit their own account page 
+ * or account editing page.
+ */
+function bounce_preprocess_page(&$vars) {
+  global $user; 
+  if (!$user->uid) {
+    return;
+  }
+  
+  $path = current_path();  
+  if (preg_match('/^user\/' . $user->uid . '($|\/edit$)/', $path) && ($warn = variable_get('bounce_notify_user_on_account_page', TRUE))) {
+    $account = user_load($user->uid);
+    if ($account->bounce_mail_blocked) {
+      $message = variable_get('bounce_notify_user_message');
+      if($message) {
+        drupal_set_message($message, 'warning', FALSE);
+      } 
+    }   
+  }
+}
