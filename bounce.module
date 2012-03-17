@@ -354,10 +354,7 @@ function bounce_process_connection_queue_item($item) {
     // how many reports are taken from the server in a single connection.
     // There may still be more non-delivery report emails in the account.
     $queue = DrupalQueue::get('bounce_connection');
-    
-    
-    // HACK
-    //$queue->createItem(array());
+    $queue->createItem(array());
   }
 }
 
@@ -383,7 +380,7 @@ function bounce_process_connection_queue_item($item) {
 function bounce_process_non_delivery_report_queue_item($report) {  
   // obtain the connector
   $analyst = variable_get('bounce_analyst', BOUNCE_DEFAULT_ANALYST);
-  $analysts = bounce_analysts();
+  $analysts = bounce_component_definitions('analyst');
   bounce_component_include($analysts[$analyst]);
   
   // check to see that the connector is configured
@@ -393,11 +390,12 @@ function bounce_process_non_delivery_report_queue_item($report) {
   
   // pass in the report and obtain an analysis in return.
   $analysis = call_user_func($analysts[$analyst]['analysis_callback'], $report);
+
   // run it through hook alter
   drupal_alter('bounce_analysis', $analysis, $report);
   // record the result if it merits recording
   bounce_include('analysis');
-  if (bounce_is_complete_non_delivery_report_analysis($analysis)) {
+  if ($complete = bounce_is_complete_non_delivery_report_analysis($analysis)) {
     bounce_record_non_delivery_report_analysis($analysis, $analyst['module'], $report);
   }
 }

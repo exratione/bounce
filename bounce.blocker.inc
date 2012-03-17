@@ -31,8 +31,10 @@ function bounce_blocked() {
   
   $mails = array();
   $threshold = variable_get('bounce_blocker_threshold_score', BOUNCE_DEFAULT_BLOCKER_THRESHOLD_SCORE);
-  while (($row = $result->fetch(PDO::FETCH_ASSOC)) && $row['score'] > $threshold) {
-    $mails[] = $mail;
+  while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    if ($row['score'] >= $threshold) {
+      $mails[] = $row['mail'];
+    }
   }
   
   return $mails;

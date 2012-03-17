@@ -182,7 +182,7 @@ function bounce_analyze_non_delivery_report($report) {
     }
   }
   
-  if ($use_unreliable_search = variable_get('bounce_analyst_use_vulnerable_email_search')) {
+  if ($use_vulnerable_search = variable_get('bounce_analyst_use_vulnerable_email_search')) {
     // If we don't have an email yet, then see if we can find one by more direct means: find the most common email in 
     // the text and see if we sent mail to it recently.
     //

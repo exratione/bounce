@@ -71,8 +71,8 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   );
   
   /**
-   * Generate a data structure for a non-delivery report. The text will be
-   * non-real, but sufficient to exercise module code.
+   * Generate a data structure for a non-delivery report email as these are stored 
+   * locally in this database. The text will be non-real, but sufficient to exercise module code.
    * 
    * @param string $smtp_code the code that should be extracted from the mail
    * @param string $recipient_email_address the email address of the original recipient

@@ -90,15 +90,6 @@ function bounce_connect() {
           )
           */
          $reports[] = $message;
-         
-         
-         
-         // HACK
-         //print('<p>GET_MESSAGE</p>');
-         //print('<pre>'.print_r($message, true).'</pre>');
-         
-         
-         // HACK
          $connector->mark_message_for_deletion($message_number);
       }
     }
@@ -226,6 +217,10 @@ function bounce_connect_settings_validate($form, &$form_state) {
   }
   if (!preg_match('/^\d+$/', $values['bounce_mail_part_size_limit_bytes']) || !$values['bounce_mail_part_size_limit_bytes']) {
     form_set_error('bounce_mail_part_size_limit_bytes', t('Maximum mail part size must be a whole number of bytes greater than zero.'));
+  }
+  
+  if($errors = form_get_errors()) {
+    return;
   }
   
   $params = array(
