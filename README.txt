@@ -73,7 +73,7 @@ Analyst.
 a code to each non-delivery report.
 
 3) Bounce then writes the codes, email addresses, and reports to the
-database. The Blocker
+database.
 
 4) The Blocker peruses the report records on each cron run. Every response
 code is associated with a score, with higher scores indicating response
