@@ -25,7 +25,7 @@ implementations through hooks defined in this module.
 -- Requirements --
 
 You must have a mail account set up to receive non-delivery report emails.
-e.g. automatic responses sent to the account bounces@mydomain.com. That
+e.g. automatic responses sent to the account bounces@example.com. That
 account must be accessible via POP or IMAP protocols from the server
 hosting your Drupal site.
 
@@ -45,20 +45,20 @@ except:
 - the Return-Path header for outgoing mail
 
 Enter these values and you are good to go. e.g. if your site is at
-mydomain.com and you have a mailserver at mail.mydomain.com, then you
+example.com and you have a mailserver at mail.example.com, then you
 might set the following values in the General Settings page:
 
-Return-Path header: bounce@mydomain.com
+Return-Path header: bounce@example.com
 
 and the following values in the Connector settings page:
 
-Server: mail.mydomain.com
+Server: mail.example.com
 Protocol: POP3S
 Login: bounce
 Password: my_obscure_password
 
 Note that depending on your mailserver, login may be the account name
-('bounce') or the full account email address ('bounce@mydomain.com').
+('bounce') or the full account email address ('bounce@example.com').
 
 -- How Bounce Marks and Blocks Addresses --
 
