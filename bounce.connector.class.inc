@@ -8,28 +8,64 @@
 /**
  * A class for connecting to a mail server account via POP3 or IMAP protocols.
  *
- * The class needs the php-imap package installed: http://www.php.net/manual/en/book.imap.php
- * On a Fedora OS, "yum install php-imap" will do the trick.
- * Yes, the php-imap package manages POP as well as IMAP.
+ * The class needs the php-imap package installed:
+ * http://www.php.net/manual/en/book.imap.php
  *
- * The innards of this class are adapted from code in a comment by Wil Barath: http://www.php.net/manual/en/book.imap.php#96414
- * It uses much of that material, while adding comments and fixing a number of issues discovered in the course of testing.
+ * On a Fedora OS, "yum install php-imap" will do the trick. Yes, the php-imap
+ * package manages POP as well as IMAP.
+ *
+ * The innards of this class are adapted from code in a comment by Wil Barath:
+ * http://www.php.net/manual/en/book.imap.php#96414
+ *
+ * This uses much of that material as a starting point, while adding comments,
+ * additional functionality, and fixing a number of issues discovered in the
+ * course of testing.
  */
 class BounceMailServerConnector {
 
+  /**
+   * A copy of the imap connection.
+   */
   protected $connection = NULL;
 
-  protected $server = NULL;       // a hostname
-  protected $port = NULL;
-  protected $protocol = NULL;     // pop3 | imap | pop3s | imaps with the latter two using SSL
-  protected $ssl = FALSE;         // boolean
-  protected $login = NULL;
-  protected $password = NULL;
-  protected $folder = NULL;       // should usually be 'INBOX'
+  /**
+   * Hostname for the mailserver.
+   */
+  protected $server = NULL;
 
   /**
-   * Don't retrieve a message part larger than this value, as it's unlikely to be
-   * text, and we're only interested in text.
+   * Port used to connect to the mailserver.
+   */
+  protected $port = NULL;
+
+  /**
+   * Protocol used: 'pop3' or 'imap'. The latter two use SSL.
+   */
+  protected $protocol = NULL;
+
+  /**
+   * Boolean: TRUE if connecting securely to the mailserver.
+   */
+  protected $ssl = FALSE;
+
+  /**
+   * The login used to connect to the mailserver.
+   */
+  protected $login = NULL;
+
+  /**
+   * The password used to connect to the mailserver.
+   */
+  protected $password = NULL;
+
+  /**
+   * The mail folder to read. For our purposes, this is almost always 'INBOX'.
+   */
+  protected $folder = NULL;
+
+  /**
+   * Don't retrieve a message part larger than this size in bytes, as it's
+   * unlikely to be text, and we're only interested in text.
    */
   protected $max_mail_part_size_bytes = NULL;
 
@@ -46,12 +82,13 @@ class BounceMailServerConnector {
    *   'timeout' => 5,
    * )
    *
-   * The available values for the protocol parameter are: ['pop3', 'pop3s', 'imap', 'imaps']. The 's' versions run over SSL.
+   * The available values for the protocol parameter are: ['pop3', 'pop3s',
+   * 'imap', 'imaps']. The 's' versions run over SSL.
    *
    * The folder parameter should almost always be 'INBOX'.
    *
    * @param array $params
-   *   The parameters for connecting to a mail server.
+   *   An associative array of the parameters for connecting to a mail server.
    */
   public function __construct($params) {
     $this->server = $params['server'];
@@ -78,7 +115,7 @@ class BounceMailServerConnector {
         break;
     }
 
-    // set the connection timeouts
+    // Set the connection timeouts.
     $result = $this->imap_timeout(IMAP_OPENTIMEOUT, $params['timeout']);
     if (!$result) {
       $this->watchdog_last_imap_error('Failed to set open timeout');
@@ -100,27 +137,35 @@ class BounceMailServerConnector {
   /**
    * Connect and log in to a mail server.
    *
-   * @return bool TRUE on success, FALSE on error.
+   * @return bool
+   *   TRUE on success, FALSE on error.
    */
   public function login() {
-    // The mail server may be self-signed if it is using SSL, so "novalidate-cert" is generally necessary. It might even be needed
-    // for non-SSL connections, depending on how the server is configured - and it doesn't hurt to have it there regardless.
+    // The mail server may be self-signed if it is using SSL, so
+    // "novalidate-cert" is generally necessary. It might even be needed for
+    // non-SSL connections, depending on how the server is configured - and
+    // it doesn't hurt to have it there regardless.
     $sslpart = ($this->ssl) ? 'ssl/novalidate-cert' : 'novalidate-cert';
     try {
       $this->connection = $this->imap_open(
         $this->get_mailbox_string(),
         $this->login,
         $this->password,
-        OP_SILENT // Why this? See https://bugs.php.net/bug.php?id=33039 and http://www.php.net/manual/en/function.imap-open.php#73514
+        // Why this? See https://bugs.php.net/bug.php?id=33039 and
+        // http://www.php.net/manual/en/function.imap-open.php#73514 for
+        // details.
+        OP_SILENT
       );
       if (!$this->connection) {
         $this->watchdog_last_imap_error(t('Login failure'));
         return FALSE;
-      } else {
+      }
+      else {
         return TRUE;
       }
     } catch (Exception $e) {
-      // plausible to see exceptions if very bad values have been passed in, such as an empty hostname string
+      // Plausible to see exceptions if very bad values have been passed in,
+      // such as an empty hostname string.
       $this->watchdog_last_imap_error($e->getMessage());
       return FALSE;
     }
@@ -128,15 +173,19 @@ class BounceMailServerConnector {
 
   /**
    * Log out of the currently active POP3 server connection.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on error.
    */
   public function logout() {
     if ($this->connection) {
-      // close connection and delete all messages flagged for deletion
+      // Close connection and delete all messages flagged for deletion.
       $result = $this->imap_close(CL_EXPUNGE);
       $this->connection = NULL;
       if (!$result) {
         $this->watchdog_last_imap_error(t('Logout failure'));
       }
+      return $result;
     }
   }
 
@@ -163,8 +212,9 @@ class BounceMailServerConnector {
   public function get_mailbox_info() {
     $check = $this->imap_mailboxmsginfo();
     if ($check) {
-      return ((array)$check);
-    } else {
+      return ((array) $check);
+    }
+    else {
       $this->watchdog_last_imap_error(t('Failed to get mailbox info'));
     }
   }
@@ -221,7 +271,8 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Return the headers of a message, either as raw text or an array indexed by header name.
+   * Return the headers of a message, either as raw text or an array indexed
+   * by header name.
    *
    * @param integer $message_number
    *   An integer index key from the array returned by list_messages().
@@ -243,7 +294,8 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Mark the the indicated message for deletion. It will be deleted when logout() is called.
+   * Mark the the indicated message for deletion. It will be deleted when
+   * logout() is called.
    *
    * @param integer $message_number
    *   An integer index key from the array returned by list_messages().
@@ -300,8 +352,8 @@ class BounceMailServerConnector {
    *   )
    * )
    *
-   * Multi-part mails will contain more array entries of data, one for each part
-   * or file attachment.
+   * Multi-part mails will contain more array entries of data, one for each
+   * part or file attachment.
    *
    * @param integer $message_number
    *   The message identifier.
@@ -315,16 +367,17 @@ class BounceMailServerConnector {
       return array();
     }
 
-    // $this->mail_get_parts() will chase down all the components of a multi-part mail,
-    // but only return the headers of a single part mail
+    // $this->mail_get_parts() will chase down all the components of a
+    // multi-part mail, but only return the headers of a single part mail.
     $mail = $this->mail_get_parts($message_number, $mail, '0');
     $mail[0]['raw'] = $mail[0]['data'];
     $mail[0]['data'] = $this->parse_mail_headers_into_array($mail[0]['raw']);
     if(!isset($mail[0]['charset'])) {
-      $mail[0]['charset'] = 'utf-8'; // probably wrong, but better than nothing
+      // Probably wrong, but better than nothing.
+      $mail[0]['charset'] = 'utf-8';
     };
 
-    // so if it is only a single part mail, we have to go and fetch the body
+    // So if it is only a single part mail, we have to go and fetch the body.
     if (count($mail) == 1) {
       $body = $this->imap_body($message_number);
       if (!is_string($body)) {
@@ -372,7 +425,8 @@ class BounceMailServerConnector {
     $error = $this->imap_last_error();
     if ($error) {
       watchdog('bounce', '%message : %error', array('%message' => $message, '%error' => $error), WATCHDOG_ERROR);
-    } else {
+    }
+    else {
       watchdog('bounce', '%message : No IMAP package error found.', array('%message' => $message), WATCHDOG_ERROR);
     }
   }
@@ -396,7 +450,8 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Recursively walk through the parts of a multi-part mail, obtaining the content for each part.
+   * Recursively walk through the parts of a multi-part mail, obtaining the
+   * content for each part.
    *
    * @param integer $message_number
    *   The identifier for the message.
@@ -410,12 +465,13 @@ class BounceMailServerConnector {
     $attachments = array();
     $attachments[$prefix] = $this->mail_decode_part($message_number, $part, $prefix);
     if (isset($part->parts)) {
-      // this is multipart
+      // This is multipart.
       $prefix = ($prefix == '0') ? '' : $prefix . '.';
       foreach ($part->parts as $index => $subpart) {
         $attachments = array_merge(
           $attachments,
-          // $index below should be 0-based, but what needs to be passed into the server is 1-based, hence the + 1
+          // The $index below should be 0-based, but what needs to be passed
+          // into the server is 1-based, hence the + 1.
           $this->mail_get_parts($message_number, $subpart, $prefix . ($index + 1))
         );
       }
@@ -458,10 +514,12 @@ class BounceMailServerConnector {
       }
     }
 
-    // If this thing is large, just return a string saying it is large. Large items are generally not what
-    // we are looking for when searching for bounce-related information.
+    // If this thing is large, just return a string saying it is large. Large
+    // items are generally not what we are looking for when searching for
+    // bounce-related information.
     //
-    // Note that if it has sub-parts, the byte count should be a sum of subpart byte counts, so ignore it.
+    // Note that if it has sub-parts, the byte count should be a sum of subpart
+    // byte counts, so ignore it.
     if (!isset($part->parts) && isset($part->bytes) && $part->bytes > $this->max_mail_part_size_bytes) {
       $attachment['data'] = t('Mail part too large to consider: @bytes bytes', array('@bytes' => $part->bytes));
       return $attachment;
@@ -471,11 +529,13 @@ class BounceMailServerConnector {
     if (!is_string($data)) {
       $this->watchdog_last_imap_error(t('Failed to retrieve message structure for message number = %id', array('%id' => $message_number)));
       $attachment['data'] = '';
-    } else {
+    }
+    else {
       if (isset($part->encoding)) {
         if ($part->encoding == 3) { // 3 = BASE64
           $attachment['data'] = base64_decode($attachment['data']);
-        } elseif ($part->encoding == 4) { // 4 = QUOTED-PRINTABLE
+        }
+        elseif ($part->encoding == 4) { // 4 = QUOTED-PRINTABLE
           $attachment['data'] = quoted_printable_decode($attachment['data']);
         }
       }
@@ -488,7 +548,8 @@ class BounceMailServerConnector {
   // Wrapper methods for IMAP functions.
   //---------------------------------------------------
 
-  // These functions are wrapped to allow overriding in child classes, e.g. for testing without the need for a mailserver.
+  // These functions are wrapped to allow overriding in child classes, e.g. for
+  // testing without the need for a mailserver.
 
   /**
    * Wrapper method.

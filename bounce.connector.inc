@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Return a connector object for use in establising a POP3, POP3S, IMAP, or IMAPS connection to a mailserver.
+ * Return a connector object for use in establising a POP3, POP3S, IMAP, or
+ * IMAPS connection to a mailserver.
  *
  * @param array $params
  *   Parameters for the connection.
@@ -21,10 +22,11 @@ function bounce_get_mailserver_connector($params = array()) {
     'folder' => 'INBOX',
   );
 
-  // Placing the connector class into a variable allows the test cases to use a different class.
-  // Overriding this is not recommended for other modules - you should instead implement
-  // hook_bounce_connector() or hook_bounce_connect_types_alter()
-  // to define a different type or different callback for the POP3, POP3S, IMAP, and IMAPS types.
+  // Placing the connector class into a variable allows the test cases to use
+  // a different class. Overriding this is not recommended for other modules -
+  // you should instead implement hook_bounce_connector() or
+  // hook_bounce_connect_types_alter() to define a different type or different
+  // callback for the POP3, POP3S, IMAP, and IMAPS types.
   $class = variable_get('bounce_connector_class', 'BounceMailServerConnector');
   bounce_include('connector.class');
   return new $class($params);
@@ -33,26 +35,30 @@ function bounce_get_mailserver_connector($params = array()) {
 /**
  * Callback function to check on connector configuration.
  *
- * @return boolean TRUE if configured.
+ * @return boolean
+ *   TRUE if configured.
  */
 function bounce_connector_is_configured() {
   if ($server = variable_get('bounce_connector_server')) {
     return TRUE;
-  } else {
+  }
+  else {
     return FALSE;
   }
 }
 
 /**
  * Callback function for connecting to a mailserver via the default connector
- * and retrieving non-delivery report email data from an account on that server.
+ * and retrieving non-delivery report email data from an account on that
+ * server.
  *
  * @param array $account
  *   Login information for the email account.
  * @param array $params
  *   Parameters for the connection.
  * @return array
- *   An indexed array of email contents for processing - hopefully non-delivery reports.
+ *   An indexed array of email contents for processing - hopefully non-delivery
+ *   reports.
  */
 function bounce_connect() {
   $reports = array();
@@ -65,7 +71,7 @@ function bounce_connect() {
     'timeout' => variable_get('bounce_connector_timeout'),
     'mail_part_size_limit' => variable_get('bounce_mail_part_size_limit_bytes'),
   );
-  // check to see that configuration exists - if not, do nothing.
+  // Check to see that configuration exists - if not, do nothing.
   foreach ($params as $value) {
     if (!$value) {
       return $reports;
@@ -85,7 +91,7 @@ function bounce_connect() {
           $message = array(
             [0] => array(
               ['data'] => associative array of headers
-              ['charset'] => the default encoding of the mail, and thus the headers
+              ['charset'] => default encoding of the mail, and thus the headers
             ),
             [1] => array(
               ['data'] => string
@@ -104,12 +110,14 @@ function bounce_connect() {
 }
 
 /**
- * Callback function to validate the account details, and see whether or not a connection can be established.
+ * Callback function to validate the account details, and see whether or not a
+ * connection can be established.
  *
  * @param array $params
  *   Parameters for the connection.
  * @return array
- *   An indexed array of email contents for processing - hopefully non-delivery reports.
+ *   An indexed array of email contents for processing - hopefully non-delivery
+ *   reports.
  */
 function bounce_connect_validate($params) {
   $connector = bounce_get_mailserver_connector($params);
@@ -121,9 +129,11 @@ function bounce_connect_validate($params) {
   return $validated;
 }
 
-
 /**
- * Callback for the settings form associated with the default connector.
+ * Form constructor for the settings form associated with the default connector.
+ *
+ * @see bounce_connect_settings_validate()
+ * @ingroup forms
  */
 function bounce_connect_settings($form, &$form_state) {
 
@@ -210,6 +220,9 @@ function bounce_connect_settings($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Form validation handler for bounce_connect_settings().
+ */
 function bounce_connect_settings_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!preg_match('/^\d+$/', $values['bounce_connector_port'])) {
@@ -225,8 +238,9 @@ function bounce_connect_settings_validate($form, &$form_state) {
     form_set_error('bounce_mail_part_size_limit_bytes', t('Maximum mail part size must be a whole number of bytes greater than zero.'));
   }
 
-  // a blank password means keep the password we have; the password field type doesn't display its value
-  // so if the user doesn't change it, we'll see an empty string rather than the existing value
+  // a blank password means keep the password we have; the password field type
+  // doesn't display its value so if the user doesn't change it, we'll see an
+  // empty string rather than the existing value
   if (empty($form_state['values']['bounce_connector_password'])) {
     $form_state['values']['bounce_connector_password'] = variable_get('bounce_connector_password', '');
   }

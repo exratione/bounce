@@ -2,15 +2,19 @@
 
 /**
  * @file
- * Enable the default blocker component's codes and scoring to be exported via the Features module.
+ * Enable the default blocker component's codes and scoring to be exported via
+ * the Features module.
+ *
+ * Note that all of the hook functions here begin "bounce_code_" rather
+ * than "bounce_". This is necessary.
  */
 
 /**
  * Implements hook_features_api().
  *
- * We have to tell features that we are defining a new entity for export: rows from the
- * bounce_code_score table. The rest of the required definitions and hook implementations
- * are in /include/bounce.features.inc.
+ * We have to tell features that we are defining a new entity for export: rows
+ * from the bounce_code_score table. The rest of the required definitions and
+ * hook implementations are in /include/bounce.features.inc.
  */
 function bounce_features_api() {
   return array(
@@ -23,8 +27,6 @@ function bounce_features_api() {
     ),
   );
 }
-
-// Note that all of the hook functions here begin "bounce_code_" rather than "bounce_". This is necessary.
 
 /**
  * Implements hook_features_export_options().
@@ -47,8 +49,8 @@ function bounce_code_features_export_options() {
 /**
  * Implements hook_features_export_render().
  *
- * Produce the PHP code that will be saved out into the generated features module
- * produced by Features.
+ * Produce the PHP code that will be saved out into the generated features
+ * module produced by Features.
  *
  * @param array $data
  *   An array of non-delivery report codes.
@@ -56,8 +58,8 @@ function bounce_code_features_export_options() {
 function bounce_code_features_export_render($module, $data) {
 
   // this code is basically copied from hook_features_export() implementations
-  // found in the /include/*.inc files in the features module. Look through those
-  // files for further examples of how to do this.
+  // found in the /include/*.inc files in the features module. Look through
+  // those files for further examples of how to do this.
 
   $output = array();
   $output[] = '$codes = array();';
@@ -78,8 +80,8 @@ function bounce_code_features_export_render($module, $data) {
 /**
  * Implements hook_features_rebuild().
  *
- * Fairly straightforward: load all the non-delivery report code defaults from features and
- * update the database.
+ * Fairly straightforward: load all the non-delivery report code defaults from
+ * features and update the database.
  */
 function bounce_code_features_rebuild($module) {
   if ($defaults = features_get_default('bounce_code', $module)) {
@@ -91,7 +93,8 @@ function bounce_code_features_rebuild($module) {
     foreach ($defaults as $code => $data) {
       if(in_array($code, $existing_codes)) {
         drupal_write_record('bounce_code_score', $data, 'code');
-      } else {
+      }
+      else {
         drupal_write_record('bounce_code_score', $data);
       }
     }
@@ -121,22 +124,24 @@ function bounce_code_features_revert($module) {
 function bounce_code_features_export($data, &$export, $module_name = '') {
 
   // this code is basically copied from hook_features_export() implementations
-  // found in the /include/*.inc files in the features module. Look through those
-  // files for further examples of how to do this.
+  // found in the /include/*.inc files in the features module. Look through
+  // those files for further examples of how to do this.
 
   $export['dependencies']['features'] = 'features';
 
   $map = features_get_default_map('bounce_code', '_bounce_code_identifier');
   foreach ($data as $varname) {
-    // If this variable is provided by a different module, add it as a dependency.
+    // If this variable is provided by a different module, add it as a
+    // dependency.
     if (isset($map[$varname]) && $map[$varname] != $module_name) {
       $export['dependencies'][$map[$varname]] = $map[$varname];
-    } else {
+    }
+    else {
       $export['features']['bounce_code'][$varname] = $varname;
     }
   }
 
-  // add the necessary dependency on this module
+  // Add the necessary dependency on this module.
   $export['dependencies']['bounce'] = 'bounce';
 
   $pipe = array();

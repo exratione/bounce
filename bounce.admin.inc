@@ -10,7 +10,10 @@
 //-----------------------------------------------------------------------
 
 /**
- * Callback for the admin settings form.
+ * Form constructor for the Bounce module general settings.
+ *
+ * @see bounce_admin_settings_validate()
+ * @ingroup forms
  */
 function bounce_admin_settings($form, &$form_state) {
 
@@ -128,14 +131,18 @@ function bounce_admin_settings($form, &$form_state) {
 
   $form = system_settings_form($form);
   $form['#validate'][] = 'bounce_admin_settings_validate';
-  // We call menu_rebuild on submit because it's a valid strategy to have the components
-  // (connector, analyst, blocker) add extra menu items to the config here if they are
-  // enabled. The default blocker does this, and so if it's swapped out the menu must
-  // be rebuilt to remove those additional menu items.
+  // We call menu_rebuild on submit because it's a valid strategy to have the
+  // components (connector, analyst, blocker) add extra menu items to the
+  // config here if they are enabled. The default blocker does this, and so if
+  // it's swapped out the menu must be rebuilt to remove those additional menu
+  // items.
   $form['#submit'][] = 'menu_rebuild';
   return $form;
 }
 
+/**
+ * Form validation handler for bounce_admin_settings().
+ */
 function bounce_admin_settings_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!valid_email_address($values['bounce_mail_header_return_path'])) {
@@ -155,7 +162,8 @@ function bounce_admin_settings_validate($form, &$form_state) {
  * @param string $component_type
  *   A component type, i.e. 'blocker', 'connector', 'analyst'.
  * @return array
- *   An associative array of component titles indexed by component machine name.
+ *   An associative array of component titles indexed by component machine
+ *   name.
  */
 function bounce_component_options($component_type) {
   $components = bounce_component_definitions($component_type);
@@ -171,8 +179,8 @@ function bounce_component_options($component_type) {
 //-----------------------------------------------------------------------
 
 /**
- * This form is simply a pass-through to pick up a configuration form for the
- * currently defined component.
+ * This form constructor is simply a pass-through to pick up a configuration
+ * form for the currently defined component.
  */
 function bounce_admin_component_configuration($form, &$form_state, $component_type, $default_component_name) {
   $component_name = variable_get('bounce_' . $component_type, $default_component_name);
@@ -189,19 +197,21 @@ function bounce_admin_component_configuration($form, &$form_state, $component_ty
 // Admin form page for blocked emails
 //-----------------------------------------------------------------------
 
+
 /**
- * Form callback for the admin page displaying blocked emails, and allowing filtering
- * and unblocking of selected emails.
+ * Form constructor for the admin page displaying blocked emails, and allowing
+ * filtering and unblocking of selected emails.
+ *
+ * @see bounce_admin_blocked_validate()
+ * @see bounce_admin_blocked_submit()
+ * @ingroup forms
  */
 function bounce_admin_blocked($form, &$form_state) {
   drupal_add_css(drupal_get_path('module', 'bounce') . '/css/bounce.admin.css');
   $filter = isset($_SESSION['bounce_admin_blocked_filter']) ? $_SESSION['bounce_admin_blocked_filter'] : '';
 
-
-  if(isset($form_state['bounce_unblock']) && $form_state['bounce_unblock']) {
-
-    // confirmation form for unblocking emails
-
+  if (isset($form_state['bounce_unblock']) && $form_state['bounce_unblock']) {
+    // Confirmation form for unblocking emails.
     $result = db_select('bounce_blocked', 'b')
       ->fields('b', array('blocked_id', 'mail'))
       ->condition('b.blocked_id', $form_state['bounce_unblock'], 'IN')
@@ -211,7 +221,7 @@ function bounce_admin_blocked($form, &$form_state) {
     $form['unblocked'] = array(
       '#prefix' => '<ul>',
       '#suffix' => '</ul>',
-      '#tree' => TRUE
+      '#tree' => TRUE,
     );
     foreach ($result as $row) {
       $form['unblocked'][$row['blocked_id']] = array(
@@ -237,16 +247,14 @@ function bounce_admin_blocked($form, &$form_state) {
     );
 
     $form['#submit'][] = 'bounce_admin_unblock_mails';
-
-  } else {
-
-    // form to list blocked mails by page
-
+  }
+  else {
+    // A form to list blocked mails by page.
     $header = array(
       t('Mail'),
       t('User'),
       t('Blocked Timestamp'),
-      t('View Non-Delivery Reports')
+      t('View Non-Delivery Reports'),
     );
     $query = db_select('bounce_blocked', 'b');
     $query->leftJoin('users', 'u', 'b.mail = u.mail');
@@ -270,9 +278,10 @@ function bounce_admin_blocked($form, &$form_state) {
       );
     }
 
-    // The ordering of form elements and their css is largely to ensure that the Filter submit is the
-    // first in order in the form HTML, even though it doesn't appear first in order on the page.
-    // This is so that a submit on enter of the filterfield textfield will cause op=Filter rather than
+    // The ordering of form elements and their css is largely to ensure that
+    // the Filter submit is the first in order in the form HTML, even though
+    // it doesn't appear first in order on the page. This is so that a submit
+    // on enter of the filterfield textfield will cause op=Filter rather than
     // one of the other possible op values.
     $form['top'] = array(
       '#type' => 'container',
@@ -328,6 +337,11 @@ function bounce_admin_blocked($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Form validation handler for bounce_admin_blocked().
+ *
+ * @see bounce_admin_blocked_submit()
+ */
 function bounce_admin_blocked_validate($form, &$form_state) {
   $values = $form_state['values'];
   if ($values['op'] == t('Unblock selected mails')) {
@@ -347,54 +361,59 @@ function bounce_admin_blocked_validate($form, &$form_state) {
 }
 
 /**
- * Form submit callback for the blocked mails form.
+ * Form submission handler for bounce_admin_blocked().
+ *
+ * @see bounce_admin_blocked_validate()
  */
 function bounce_admin_blocked_submit($form, &$form_state) {
   $values = $form_state['values'];
   if ($values['op'] == t('Filter')) {
     $_SESSION['bounce_admin_blocked_filter'] = $values['filterfield'];
-  } elseif ($values['op'] == t('Clear')) {
+  }
+  elseif ($values['op'] == t('Clear')) {
     unset($_SESSION['bounce_admin_blocked_filter']);
-  } elseif ($values['op'] == t('Unblock selected mails')) {
-    // have to send off to a delete confirmation page; marshal up the list of things to show on that page
+  }
+  elseif ($values['op'] == t('Unblock selected mails')) {
+    // We have to send off to a delete confirmation page; marshal up the list
+    // of things to show on that page.
     $form_state['bounce_unblock'] = array();
     foreach ($values['mails'] as $blocked_id) {
       if ($blocked_id) {
         $form_state['bounce_unblock'][] = $blocked_id;
       }
     }
-    // send back to the form page to show a confirmation
+    // Send back to the form page to show a confirmation.
     $form_state['rebuild'] = TRUE;
   }
 }
 
 /**
- * Form submit function for the unblock mails confirmation form. Delete the blocked mails from the database,
- * as well as any non-delivery reports that were used to block them.
+ * Form submission handler for the unblock mails confirmation form.
+ * Delete the blocked mails from the database, as well as any non-delivery
+ * reports that were used to block them.
  */
 function bounce_admin_unblock_mails($form, &$form_state) {
   $blocked_ids = array_keys($form_state['values']['unblocked']);
 
-  // list of the mails we're deleting
+  // A list of the mails we're deleting.
   $mails = db_select('bounce_blocked', 'b')
     ->fields('b', array('mail'))
     ->condition('b.blocked_id', $blocked_ids, 'IN')
     ->execute()
     ->fetchCol();
 
-  // delete them
+  // Delete them.
   db_delete('bounce_blocked')
     ->condition('blocked_id', $blocked_ids, 'IN')
     ->execute();
 
-  // and delete any non-delivery reports marked used associated with them
+  // And delete any non-delivery reports marked used associated with them.
   db_delete('bounce_non_delivery_report')
     ->condition('mail', $mails, 'IN')
     ->condition('status', BOUNCE_NDR_STATUS_USED, '=')
     ->execute();
 
   drupal_set_message(format_plural(count($form_state['values']['unblocked']), 'Unblocked 1 mail.', 'Unblocked @count mails'));
-
   module_invoke_all('bounce_mails_unblocked', $mails);
 }
 
@@ -446,7 +465,11 @@ function bounce_admin_view_non_delivery_report_list() {
     '#empty' => t(
     	'No non-delivery reports have been received and successfully analyzed within the last @days.',
     	array(
-    	  '@days' => format_plural(variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS), '1 day', '@count days')
+    	  '@days' => format_plural(
+    	    variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS),
+    	    '1 day',
+    	    '@count days'
+    	  ),
     	)
     ),
   );
@@ -454,8 +477,8 @@ function bounce_admin_view_non_delivery_report_list() {
 }
 
 /**
- * Present a table of non-delivery reports associated with a blocked mail that loads the text of
- * the report emails via ajax.
+ * Present a table of non-delivery reports associated with a blocked mail that
+ * loads the text of the report emails via ajax.
  *
  * @param array $blocked_mail
  *   A associative array containing the column names and values for a single row from the
@@ -492,7 +515,8 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
           'method' => 'replace',
           'effect' => 'fade',
           'progress' => array(
-            // suppress the throbber/message rather than try to figure out how to accomodate it in the table
+            // Suppress the throbber/message rather than try to figure out how
+            // to accomodate it in the table.
             'message' => '',
           ),
         ),
@@ -526,8 +550,8 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
 }
 
 /**
- * Page callback to view a specific non-delivery report. The result can be returned as AJAX or a normal
- * page render array.
+ * Page callback to view a specific non-delivery report. The result can be
+ * returned as AJAX or a normal page render array.
  *
  * @param string $call_type
  *   Values 'ajax' or 'nojs' to show whether this an ajax call or not.
@@ -538,8 +562,7 @@ function bounce_admin_view_non_delivery_report($call_type, $report_row) {
   $page = array();
   $report = $report_row['report'];
 
-  // mail headers first
-
+  // Mail headers first.
   $header_part = array_shift($report);
   $header = array(
     t('Mail Header'),
@@ -555,8 +578,7 @@ function bounce_admin_view_non_delivery_report($call_type, $report_row) {
     '#rows' => $rows,
   );
 
-  // now the rest of the mail parts
-
+  // Now the rest of the mail parts.
   foreach ($report as $index => $part) {
     $header = array(
       t('Mail Part @part', array('@part' => $index + 1)),
@@ -571,10 +593,9 @@ function bounce_admin_view_non_delivery_report($call_type, $report_row) {
     );
   }
 
-  // what we return depends on whether this is an ajax call or not
-
+  // What we return depends on whether this is an ajax call or not.
   if ($call_type == 'ajax') {
-    // wrap the report with the div the resulting HTML will be replacing
+    // Wrap the report with the div the resulting HTML will be replacing.
     $page['#prefix'] = '<div id="bounce-report-wrapper">';
     $page['#suffix'] = '</div>';
     $commands = array(
@@ -584,8 +605,9 @@ function bounce_admin_view_non_delivery_report($call_type, $report_row) {
       '#type' => 'ajax',
       '#commands' => $commands,
     ));
-  } else {
-    // set an appropriate title
+  }
+  else {
+    // Set an appropriate title.
     drupal_set_title(t('Non-delivery report @id for @mail', array('@mail' => $report_row['mail'], '@id' => $report_row['report_id'])));
     return $page;
   }

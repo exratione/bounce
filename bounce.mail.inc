@@ -10,13 +10,14 @@
  *
  * Here we do the following:
  *
- * 1) Set the return path header to the address specified in the admin settings form.
+ * 1) Set the return path header to the address specified in the admin settings
+ * form.
  *
- * 2) Add an identifier to the headers that should help match up non-delivery reports with
- * the email address that the originating mail was sent to.
+ * 2) Add an identifier to the headers that should help match up non-delivery
+ * reports with the email address that the originating mail was sent to.
  *
- * 3) Block outgoing mail to by removing addresses from $message['to'] or setting
- * $message['send'] = FALSE.
+ * 3) Block outgoing mail to by removing addresses from $message['to'] or
+ * setting $message['send'] = FALSE.
  */
 function bounce_mail_alter(&$message) {
   $return_path = variable_get('bounce_mail_header_return_path', '');
@@ -28,15 +29,16 @@ function bounce_mail_alter(&$message) {
   // is RFC 2822, so could be a comma-delimited string of multiple addresses.
   $to = bounce_mail_remove_blocked_addresses($message['to']);
   if (empty($to)) {
-    // no non-blocked addresses to send to, so don't send it.
+    // No non-blocked addresses to send to, so don't send it.
     $message['send'] = FALSE;
     return;
-  } else {
-    // update and carry on.
+  }
+  else {
+    // Update and carry on.
     $message['to'] = $to;
   }
 
-  // extract emails from the "to" string
+  // Extract emails from the "to" string.
   $emails = _bounce_unique_mails_from_text($message['to']);
 
   // If there is more than one email then they all get the same header.

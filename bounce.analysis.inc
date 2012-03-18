@@ -2,7 +2,8 @@
 
 /**
  * @file
- * Code relating to processing a non-delivery report to establish the original recipient email address and a code for the report.
+ * Code relating to processing a non-delivery report to establish the original
+ * recipient email address and a code for the report.
  */
 
 //---------------------------------------------------------------------------------
@@ -62,15 +63,17 @@ function bounce_is_complete_non_delivery_report_analysis($analysis) {
 /**
  * Callback function for the default analyst component.
  *
- * Process a non-delivery report email. Or at least, process an email that may or may not be a non-delivery report.
- * Half the fun is figuring out whether or not this email is even useful, as all sorts of unrelated junk tends
- * to turn up out of the blue into a Return-Path address account.
+ * Process a non-delivery report email. Or at least, process an email that may
+ * or may not be a non-delivery report. Half the fun is figuring out whether
+ * or not this email is even useful, as all sorts of unrelated junk tends to
+ * turn up out of the blue into a Return-Path address account.
  *
- * The provided $report parameter must be an indexed array of message parts. Each message part is in turn an
- * array containing at least 'charset' and 'data' keys as shown below. The first part will be
- * headers, the rest body and attachment parts. Different mail servers vary greatly as to how they
- * will arrange message parts, so be prepared to look through it all - even a simple text body may be split
- * up into several parts.
+ * The provided $report parameter must be an indexed array of message parts.
+ * Each message part is in turn an array containing at least 'charset' and
+ * 'data' keys as shown below. The first part will be headers, the rest body
+ * and attachment parts. Different mail servers vary greatly as to how they
+ * will arrange message parts, so be prepared to look through it all - even a
+ * simple text body may be split up into several parts.
  *
  * $report = array(
  *  [0] => array(
@@ -103,7 +106,7 @@ function bounce_analyze_non_delivery_report($report) {
     'mail' => '',
   );
 
-  // is this a valid and useful report?
+  // Is this a valid and useful report?
   if( !is_array($report) || count($report) < 2 ) {
     return $analysis;
   }
@@ -117,7 +120,8 @@ function bounce_analyze_non_delivery_report($report) {
   foreach ($header_part['data'] as $name => $value) {
     $headers[drupal_strtolower($name)] = $value;
   }
-  // Autoreplies are surprisingly common ('out of office, contact later'). People need to stop doing this; it just generates clutter.
+  // Autoreplies are surprisingly common ('out of office, contact later').
+  // People need to stop doing this; it just generates clutter.
   if(bounce_analysis_is_autoreply($headers)) {
     $analysis['code'] = 'autoreply';
   }
@@ -126,10 +130,11 @@ function bounce_analyze_non_delivery_report($report) {
   // Now start in on the rest of it, and try to establish a code.
   // ---------------------------------------------------------------
 
-  // We're looking for the identifying header from the original email that generated this non-delivery
-  // report, and also any SMTP codes or other information we can use to categorize the report.
+  // We're looking for the identifying header from the original email that
+  // generated this non-delivery report, and also any SMTP codes or other
+  // information we can use to categorize the report.
 
-  // determine a response code
+  // Determine a response code.
   if (!$analysis['code']) {
     foreach ($report as $part) {
       if ($analysis['code']) {
@@ -139,8 +144,9 @@ function bounce_analyze_non_delivery_report($report) {
     }
   }
 
-  // No code? Then give up; not much to be done here. This is expected to happen: you'd be surprised at the
-  // outright strange and irrelevant email that turns up in an account that is only used as a Return-Path catchall.
+  // No code? Then give up; not much to be done here. This is expected to
+  // happen: you'd be surprised at the outright strange and irrelevant email
+  // that turns up in an account that is only used as a Return-Path catchall.
   if (!$analysis['code']) {
     return $analysis;
   }
@@ -151,10 +157,12 @@ function bounce_analyze_non_delivery_report($report) {
 
   $ignored_mails = bounce_analysis_ignored_mails();
 
-  // Try to find the original header ID that will link this non-delivery report to an email address, or more than
-  // one email address if the original was sent to multiple destinations.
+  // Try to find the original header ID that will link this non-delivery
+  // report to an email address, or more than one email address if the
+  // original was sent to multiple destinations.
   //
-  // This may or may not work: not all non-delivery report formats include the headers of the original mail.
+  // This may or may not work: not all non-delivery report formats include
+  // the headers of the original mail.
   foreach ($report as $part) {
     $match = array();
     $matched = preg_match('/' . BOUNCE_MAIL_HEADER_ID_KEY . '\s*:\s*([^\s\r\n]+)/', $part['data'], $match);
@@ -170,38 +178,47 @@ function bounce_analyze_non_delivery_report($report) {
         // this matches one address, so we are done here.
         $analysis['mail'] = array_shift($mails);
         return $analysis;
-      } elseif ($count > 1) {
-        // More of a challenge: since the original email was sent to multiple addresses, we have to be sure
-        // we correctly determine which is the problem child that generated this non-delivery report.
+      }
+      elseif ($count > 1) {
+        // More of a challenge: since the original email was sent to multiple
+        // addresses, we have to be sure that we correctly determine which is
+        // the problem child that generated this non-delivery report.
         //
-        // So loop through the parts again and get counts of the various addresses. Pick the one with the highest
-        // count. This isn't completely foolproof, but it is the best option going short of much more fiddly rules,
-        // checks, and rules within checks.
+        // So loop through the parts again and get counts of the various
+        // addresses. Pick the one with the highest count. This isn't
+        // completely foolproof, but it is the best option going short of much
+        // more fiddly rules, checks, and rules within checks.
         $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_mails, $mails);
-        // Note that the return will be empty if the two highest counts are tied - unlikely, but you never know.
+        // Note that the return will be empty if the two highest counts are
+        // tied - unlikely, but you never know.
         if($email) {
           $analysis['mail'] = $email;
         }
-        // return in either case
+        // Return in either case.
         return $analysis;
       }
     }
   }
 
   if ($use_vulnerable_search = variable_get('bounce_analyst_use_vulnerable_email_search')) {
-    // If we don't have an email yet, then see if we can find one by more direct means: find the most common email in
-    // the text and see if we sent mail to it recently.
+    // If we don't have an email yet, then see if we can find one by more
+    // direct means: find the most common email in the text and see if we
+    // sent mail to it recently.
     //
-    // Note that one reason for using UUIDs and a special header in the mail is to make it hard for an attacker
-    // to send crafted mails to your Return-Path address that will cause you to block future outgoing mails. Not very
-    // likely, but why make it possible at all? When we move away from UUID identifiers, we open that door.
+    // Note that one reason for using UUIDs and a special header in the mail
+    // is to make it hard for an attacker to send crafted mails to your
+    // Return-Path address that will cause you to block future outgoing mails.
+    // Not very likely, but why make it possible at all? When we move away from
+    // UUID identifiers, we open that door.
     //
-    // TODO: make this more sophisticated in an effort to avoid false positives and attacks.
+    // TODO: make this more sophisticated in an effort to avoid false positives
+    // and attacks.
     //
     $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_mails);
     if ($mail) {
-      // did we sent out an email within the last hour to this address? For the reasons noted above, we want to
-      // ensure that this check is a short timeline, to limit the opportunity for attacks using crafted emails
+      // did we sent out an email within the last hour to this address? For the
+      // reasons noted above, we want to ensure that this check is a short
+      // timeline, to limit the opportunity for attacks using crafted emails
       // sent to the Return-Path address.
       $count = db_select('bounce_sent')
         ->condition('mail', $mail, '=')
@@ -221,7 +238,8 @@ function bounce_analyze_non_delivery_report($report) {
 
 /**
  * @param array $headers
- *   A header associative array for a non-delivery report, values indexed by names.
+ *   A header associative array for a non-delivery report, values indexed by
+ *   names.
  * @return boolean
  *   TRUE if the headers indicate this to be an autoreply mail.
  */
@@ -230,13 +248,15 @@ function bounce_analysis_is_autoreply($headers) {
 }
 
 /**
- * Helper function to parse out an SMTP response code or other determination from text.
- * In the grand scheme of things this is not a very sophisticated approach. For a much more
- * sophisticated consideration, you might look at something like the BounceHandler class:
+ * Helper function to parse out an SMTP response code or other determination
+ * from text. In the grand scheme of things this is not a very sophisticated
+ * approach. For a much more sophisticated consideration, you might look at
+ * something like the BounceHandler class:
+ *
  * http://www.phpclasses.org/browse/file/11665.html
  *
- * But the contention here is that you can get by with comparatively little sophistication
- * if all you want is to avoid looking like a spam source.
+ * But the contention here is that you can get by with comparatively little
+ * sophistication if all you want is to avoid looking like a spam source.
  *
  * @param string $text
  * @return string
@@ -245,24 +265,27 @@ function bounce_analysis_is_autoreply($headers) {
 function bounce_analysis_code_from_text($text) {
   $code = '';
   $matches = array();
-  // RFC 1893 return code e.g. 5.1.1
+  // RFC 1893 return code e.g. 5.1.1 or similar.
   if (preg_match('/\b([45]\.[01234567]\.[012345678])\b/', $text, $matches)) {
     $code = $matches[1];
   }
-  // RFC 821 return code e.g. 550
+  // RFC 821 return code e.g. 550 or similar.
   if (!$code && preg_match('/\b([45][01257][012345])\b/', $text, $matches)) {
     $code = $matches[1];
   }
 
-  // The regex below is intended to match key words from spam blocker notices without
-  // matching x-spam* headers if they are fed back in the response, as they are often irrelevant.
+  // The regex below is intended to match key words from spam blocker notices
+  // without matching x-spam* headers if they are fed back in the response, as
+  // they are often irrelevant.
   $spam_match_regex = '/[^\B\-](spam|blocked|rejected)\b/i';
 
-  // If this is a 5** code and it looks like a spam filter response, then put it into a different
-  // bucket. Spam filter responses are often false positives but may send back 550 or other
-  // permanent failure type codes. Unless you are in fact sending spam, these will be false positives
-  // and should not be respected - but should be noted. If you are generating a lot of them, that
-  // indicates that you should be paying attention to email contents.
+  // If this is a 5** code and it looks like a spam filter response, then put
+  // it into a different bucket. Spam filter responses are often false
+  // positives but may send back 550 or other permanent failure type codes.
+  // Unless you are in fact sending spam, these will be false positives and
+  // should not be respected - but should be noted. If you are generating a lot
+  // of them, that indicates that you should be paying attention to email
+  // contents.
   $matches = array();
   if ($code && preg_match('/^5/', $code) && preg_match_all($spam_match_regex, $text, $matches) > 1) {
     $code = 'spamfilter';
@@ -272,15 +295,16 @@ function bounce_analysis_code_from_text($text) {
     return $code;
   }
 
-  // An annoyingly common greylisting case with no SMTP code. May no longer be relevant, but
-  // can't hurt to keep it around.
+  // An annoyingly common greylisting case with no SMTP code. May no longer be
+  // relevant, but can't hurt to keep it around.
   if (preg_match('/YOU DO NOT NEED TO RESEND YOUR MESSAGE|delivery temporarily suspended/i', $text)) {
     $code = 'greylist';
     return $code;
   }
 
-  // Another check on the spam filter case. This will probably match more than it should, but seems worth
-  // trying given the structure of most non-delivery responses.
+  // Another check on the spam filter case. This will probably match more than
+  // it should, but seems worth trying given the structure of most non-delivery
+  // responses.
   if (preg_match_all($spam_match_regex, $text, $matches) > 1) {
     $code = 'spamfilter';
   }
@@ -289,19 +313,20 @@ function bounce_analysis_code_from_text($text) {
 }
 
 /**
- * Check all the non-header sections of a bounce report data structure, and count the instances
- * of specific email addresses.
+ * Check all the non-header sections of a bounce report data structure, and
+ * count the instances of specific email addresses.
  *
  * @param array $report
  *   A non-delivery report data structure.
  * @param array $filter_emails
- *   An indexed array of email addresses: if not empty, only count instances of these email addresses.
- *   Otherwise count them all.
+ *   An indexed array of email addresses: if not empty, only count instances
+ *   of these email addresses. Otherwise count them all.
  * @param array $ignored_emails
- *   An indexed array of email addresses. These are ignored for the purpose of finding the more
- *   frequently occuring email.
+ *   An indexed array of email addresses. These are ignored for the purpose
+ *   of finding the more frequently occuring email.
  * @return mixed
- *   FALSE on failure to find the most frequent, or the email address otherwise.
+ *   FALSE on failure to find the most frequent, or the email address
+ *   otherwise.
  */
 function bounce_analysis_get_most_frequent_mail($report, $ignored_emails = array(), $filter_emails = array()) {
   $filter_emails = array_flip(array_unique($filter_emails));
@@ -316,38 +341,45 @@ function bounce_analysis_get_most_frequent_mail($report, $ignored_emails = array
       foreach ($part_counts as $email => $count) {
         if (!isset($counts[$email])) {
           $counts[$email] = $count;
-        } else {
+        }
+        else {
           $counts[$email] += $count;
         }
       }
     }
   }
 
-  // strip out the ignored emails.
+  // Strip out the ignored emails.
   $counts = array_diff_key($counts, $ignored_emails);
 
   if (empty($counts)) {
     return FALSE;
-  } elseif (count($counts) == 1) {
+  }
+  elseif (count($counts) == 1) {
     return key($counts);
-  } else {
-    // sort the array so that the largest count is at the end, and look at the two largest counts.
+  }
+  else {
+    // Sort the array so that the largest count is at the end, and look at the
+    // two largest counts.
     asort($counts);
     $max_count = end($counts);
     $max_email = key($counts);
     $second_max_count = prev($counts);
     if ($max_count == $second_max_count) {
-      // if the two largest counts are equal, then we can't declare a most frequent email.
+      // If the two largest counts are equal, then we can't declare a most
+      // frequent email.
       return FALSE;
-    } else {
-      // otherwise return the final email in the array.
+    }
+    else {
+      // Otherwise return the final email in the array.
       return $max_email;
     }
   }
 }
 
 /**
- * Return an indexed array of email addresses to disregard while digging through non-delivery reports.
+ * Return an indexed array of email addresses to disregard while digging
+ * through non-delivery reports.
  *
  * @return array
  */
@@ -384,7 +416,10 @@ function bounce_analyst_is_configured() {
 //------------------------------------------------------
 
 /**
- * Settings form callback for configuring the default analyst component.
+ * Form constructor for the default analyst component settings form.
+ *
+ * @see bounce_analyst_settings_validate()
+ * @ingroup forms
  */
 function bounce_analyst_settings($form, &$form_state) {
   $form['analyst'] = array(
@@ -411,6 +446,9 @@ function bounce_analyst_settings($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Form validation handler for bounce_analyst_settings().
+ */
 function bounce_analyst_settings_validate($form, &$form_state) {
   if ($form_state['values']['bounce_analyst_ignored_emails']) {
     $mails = explode(',', $form_state['values']['bounce_analyst_ignored_emails']);

@@ -2,23 +2,28 @@
 
 /**
  * @file
- * Functions for the default blocker component, which manages determination of which emails to block based on analyzed non-delivery report
- * records.
+ * Functions for the default blocker component, which manages determination of
+ * which emails to block based on analyzed non-delivery report records.
  */
 
 /**
- * Callback for the default blocker component. Find emails with a summed score from non-delivery reports to put them past the threshold,
- * and return them.
+ * Callback for the default blocker component. Find emails with a summed score
+ * from non-delivery reports to put them past the threshold, and return them.
+ *
+ * @return array
+ *   An indexed array of email addresses to to be blocked.
  */
 function bounce_blocked() {
 
   $age_in_seconds = variable_get('bounce_max_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS) * 86400;
   $time = time() - $age_in_seconds;
 
-  // SQL to select summed non-delivery report scores greater than the threshold, but only for mails that are not already blocked,
-  // and only consider non-delivery reports that have not already been used to block a mail. The latter condition takes into account
-  // the case where an admin unblocks a blocked mail - we only want to reblock that mail if new non-delivery reports turn up.
-
+  // SQL to select summed non-delivery report scores greater than the
+  // threshold, but only for mails that are not already blocked, and only
+  // consider non-delivery reports that have not already been used to block a
+  // mail. The latter condition takes into account the case where an admin
+  // unblocks a blocked mail - we only want to reblock that mail if new
+  // non-delivery reports turn up.
   $query = db_select('bounce_non_delivery_report', 'ndr');
   $query->innerJoin('bounce_code_score', 'cs', 'ndr.code = cs.code');
   $query->addExpression('SUM(cs.score)', 'score');
@@ -55,6 +60,12 @@ function bounce_blocker_is_configured() {
 // Settings form for the default blocker component
 //------------------------------------------------------
 
+/**
+ * Form constructor for the blocker component settings form.
+ *
+ * @see bounce_blocker_settings_validate()
+ * @ingroup forms
+ */
 function bounce_blocker_settings($form, &$form_state) {
 
   $form['blocker'] = array(
@@ -75,6 +86,9 @@ function bounce_blocker_settings($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Form validation handler for bounce_blocker_settings().
+ */
 function bounce_blocker_settings_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!preg_match('/^\d+$/', $values['bounce_blocker_threshold_score'])) {
@@ -92,7 +106,7 @@ function bounce_blocker_settings_validate($form, &$form_state) {
 function bounce_admin_scoring() {
   $page = array();
 
-  // build a table to show the existing scoring, with links to edit/delete
+  // Build a table to show the existing scoring, with links to edit/delete.
   $codes = db_select('bounce_code_score', 'cs')
     ->fields('cs')
     ->orderBy('type', 'ASC')
@@ -145,7 +159,11 @@ function bounce_admin_scoring() {
 }
 
 /**
- * A form to edit a specific code's scoring and other details.
+ * Form constructor for the code scoring editing form.
+ *
+ * @see bounce_admin_edit_code_validate()
+ * @see bounce_admin_edit_code_submit()
+ * @ingroup forms
  */
 function bounce_admin_edit_code($form, &$form_state, $data = NULL) {
   if ($data) {
@@ -162,7 +180,8 @@ function bounce_admin_edit_code($form, &$form_state, $data = NULL) {
       '#title' => t('Code'),
       '#markup' => check_plain($data['code']),
     );
-  } else {
+  }
+  else {
     $form['code_is_new'] = array(
       '#type' => 'value',
       '#value' => TRUE,
@@ -203,6 +222,11 @@ function bounce_admin_edit_code($form, &$form_state, $data = NULL) {
   return $form;
 }
 
+/**
+ * Form validation handler for bounce_admin_edit_code().
+ *
+ * @see bounce_admin_edit_code_submit()
+ */
 function bounce_admin_edit_code_validate($form, &$form_state) {
   if (!preg_match('/^\d+$/', $form_state['values']['score'])) {
     form_set_error('score', t('Score must be a whole number.'));
@@ -220,6 +244,11 @@ function bounce_admin_edit_code_validate($form, &$form_state) {
   }
 }
 
+/**
+ * Form submission handler for bounce_admin_edit_code().
+ *
+ * @see bounce_admin_edit_code_validate()
+ */
 function bounce_admin_edit_code_submit($form, &$form_state) {
   $values = $form_state['values'];
   $data = array(
@@ -233,7 +262,8 @@ function bounce_admin_edit_code_submit($form, &$form_state) {
     $data['code'] = bounce_admin_code_machine_name($data['code']);
     drupal_write_record('bounce_code_score', $data);
     drupal_set_message(t('The code %code has been created.', array('%code' => $data['code'])));
-  } else {
+  }
+  else {
     drupal_write_record('bounce_code_score', $data, 'code');
     drupal_set_message(t('The code %code has been updated.', array('%code' => $data['code'])));
   }
@@ -241,8 +271,10 @@ function bounce_admin_edit_code_submit($form, &$form_state) {
 }
 
 /**
+ * Create a machine name from a user-entered name for a code.
  *
  * @param string $code
+ *   The user enterend code.
  * @return string
  *   A machine name version of the code.
  */
@@ -251,7 +283,14 @@ function bounce_admin_code_machine_name($code) {
 }
 
 /**
- * A confirmation form to delete a specific code and its scoring.
+ * Form constructor for the confirmation form to delete a specific code and its
+ * scoring.
+ *
+ * @param array $data
+ *   An associative array containing the code to delete.
+ *
+ * @see bounce_admin_delete_code_submit()
+ * @ingroup forms
  */
 function bounce_admin_delete_code($form, &$form_state, $data) {
   $form['code'] = array(
@@ -268,7 +307,7 @@ function bounce_admin_delete_code($form, &$form_state, $data) {
 }
 
 /**
- * Execute the deletion of a code and its scoring.
+ * Form submission handler for bounce_admin_delete_code().
  */
 function bounce_admin_delete_code_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
@@ -282,9 +321,11 @@ function bounce_admin_delete_code_submit($form, &$form_state) {
 }
 
 /**
- * Helper function to return an array of code types suitable for use in a select.
+ * A helper function to return an array of code types suitable for use
+ * in a select.
  *
- * @return array an associative array of $type_id => $type_title
+ * @return array
+ *   An associative array of $type_id => $type_title.
  */
 function _bounce_admin_code_type_options() {
   $options = &drupal_static(__FUNCTION__);

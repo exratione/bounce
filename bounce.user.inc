@@ -2,13 +2,15 @@
 
 /**
  * @file
- * Implementations of user hooks and other integration with the user experience.
+ * Implementations of user hooks and other integration with the user
+ * experience.
  */
 
 /**
  * Implements hook_user_load().
  *
- * Add a property to the user object to show whether or not the user's email is marked blocked.
+ * Add a property to the user object to show whether or not the user's email
+ * is marked blocked.
  */
 function bounce_user_load($users) {
   $query = db_select('bounce_blocked', 'b');
@@ -20,7 +22,8 @@ function bounce_user_load($users) {
   foreach ($users as $uid => $user) {
     if (in_array($uid, $blocked_uids)) {
       $user->bounce_mail_blocked = TRUE;
-    } else {
+    }
+    else {
       $user->bounce_mail_blocked = FALSE;
     }
   }
