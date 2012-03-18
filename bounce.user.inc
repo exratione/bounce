@@ -14,7 +14,7 @@
  */
 function bounce_user_load($users) {
   $query = db_select('bounce_blocked', 'b');
-  $query->innerJoin('users', 'u' , 'b.mail = u.mail');
+  $query->innerJoin('users', 'u', 'b.mail = u.mail');
   $blocked_uids = $query->fields('u', array('uid'))
     ->condition('u.uid', array_keys($users), 'IN')
     ->execute()
@@ -38,7 +38,7 @@ function bounce_user_login(&$edit, $account) {
   $notify = variable_get('bounce_notify_user_on_login', TRUE);
   if ($notify && $account->bounce_mail_blocked) {
     $message = variable_get('bounce_notify_user_message');
-    if($message) {
+    if ($message) {
       drupal_set_message(check_plain($message), 'warning', FALSE);
     }
   }
@@ -68,7 +68,7 @@ function bounce_user_register_form_validate($form, &$form_state) {
       ->execute()
       ->fetchField();
     $message = variable_get('bounce_error_on_registration_message');
-    if($message && $count) {
+    if ($message && $count) {
       form_set_error('mail', check_plain($message));
     }
   }
@@ -96,7 +96,7 @@ function bounce_user_pass_validate($form, &$form_state) {
   if ($user && $user->bounce_mail_blocked) {
     $notify = variable_get('bounce_error_on_password_reset', TRUE);
     $message = variable_get('bounce_error_on_password_reset_message');
-    if($message && $notify) {
+    if ($message && $notify) {
       form_set_error('mail', check_plain($message));
     }
   }

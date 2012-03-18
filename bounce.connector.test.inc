@@ -37,9 +37,11 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     parent::__construct($params);
   }
 
-  //----------------------------------------------------------------------------
-  // Mail templates
-  //----------------------------------------------------------------------------
+  /*
+   -----------------------------------------------------------------------
+   Mail templates.
+   -----------------------------------------------------------------------
+  */
 
   /**
    * The upper level overview data for a mail.
@@ -118,10 +120,11 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     return $report;
   }
 
-
-  //----------------------------------------------------------------------------
-  // Methods for managing test mail data.
-  //----------------------------------------------------------------------------
+  /*
+   -----------------------------------------------------------------------
+   Methods for managing test mail data.
+   -----------------------------------------------------------------------
+  */
 
   /**
    * Return the mailbox.
@@ -162,7 +165,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
 
     // And reorder the numbering on the mailbox.
     $ordered_mailbox = array();
-    foreach($mailbox as $mail) {
+    foreach ($mailbox as $mail) {
       if (!count($ordered_mailbox)) {
         $ordered_mailbox[1] = $mail;
       }
@@ -193,9 +196,11 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     $this->__store_mailbox($mailbox);
   }
 
-  //----------------------------------------------------------------------------
-  // Redeclarations to make properties public and thus accessible for testing.
-  //----------------------------------------------------------------------------
+  /*
+   -----------------------------------------------------------------------
+   Redeclarations to make properties public and thus accessible for testing.
+   -----------------------------------------------------------------------
+  */
 
   public $server = NULL;
   public $port = NULL;
@@ -226,9 +231,12 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     return parent::mail_decode_part($message_number, $part, $prefix);
   }
 
-  //----------------------------------------------------------------------------
-  // Wrapper methods to generate responses as though from IMAP package functions
-  //----------------------------------------------------------------------------
+  /*
+   -----------------------------------------------------------------------
+   Wrapper methods to generate responses as though from IMAP package
+   functions.
+   -----------------------------------------------------------------------
+  */
 
   /**
    * Overrides BounceMailServerConnector::imap_body().
@@ -328,7 +336,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     if (preg_match('/:/', $range)) {
       list($start, $end) = explode(':', $range);
       $mails = array();
-      foreach($mailbox as $message_number => $mail) {
+      foreach ($mailbox as $message_number => $mail) {
         if ($message_number >= $start && $message_number <= $end) {
           $mails[$message_number] = $mail;
         }

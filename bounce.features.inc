@@ -91,7 +91,7 @@ function bounce_code_features_rebuild($module) {
       ->execute()
       ->fetchCol();
     foreach ($defaults as $code => $data) {
-      if(in_array($code, $existing_codes)) {
+      if (in_array($code, $existing_codes)) {
         drupal_write_record('bounce_code_score', $data, 'code');
       }
       else {

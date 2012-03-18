@@ -6,12 +6,13 @@
  */
 
 /**
- * Implements hook_bounce_code_type();
+ * Implements hook_bounce_code_type().
  *
  * Return the default bounce code types. These are ornamental only, but
  * help keep things usefully categorized.
  *
  * @return array
+ *   An associative array of bounce code types.
  */
 function bounce_bounce_code_type() {
   $types = array();
@@ -47,7 +48,7 @@ function bounce_bounce_code_type_alter(&$types) {
 
 
 /**
- * Implements hook_bounce_analyst();
+ * Implements hook_bounce_analyst().
  *
  * Specify an analysis component that will extract a code and email address
  * from a non-delivery report. The returned array has the form:
@@ -61,7 +62,7 @@ function bounce_bounce_code_type_alter(&$types) {
  *     'file' => 'bounce.analysis.inc',   // optional
  *   ),
  *   'another' => array(
- *   	 ...
+ *      ...
  *   ),
  *   ...
  * );
@@ -139,7 +140,7 @@ function bounce_bounce_analyst() {
  */
 function bounce_bounce_analyst_alter(&$analysts) {
   // For example, change the name of the default analyst component
-  // $analysts['default']['title'] = t('Default: simple mail header and body parser');
+  // $analysts['default']['title'] = t('new name');
 }
 
 /**
@@ -245,6 +246,7 @@ function bounce_bounce_analysis_alter(&$analysis, $report) {
  * as soon as they are obtained.
  *
  * @return array
+ *   An associative array of connector definitions.
  */
 function bounce_bounce_connector() {
   $connectors = array();
@@ -309,6 +311,7 @@ function bounce_bounce_connector_alter(&$connectors) {
  * table) should be returned from a call to the block callback.
  *
  * @return array
+ *   An associative array of blocker definitions.
  */
 function bounce_bounce_blocker() {
   $blockers = array();
@@ -341,7 +344,9 @@ function bounce_bounce_blocker_alter(&$blockers) {
  * @param array $mails
  *   An indexed array of email addresses that have just been blocked.
  */
-function bounce_bounce_mails_blocked($mails) {}
+function bounce_bounce_mails_blocked($mails) {
+
+}
 
 /**
  * Implements hook_bounce_mails_unblocked().
@@ -349,4 +354,6 @@ function bounce_bounce_mails_blocked($mails) {}
  * @param array $mails
  *   An indexed array of email addresses that have just been unblocked.
  */
-function bounce_bounce_mails_unblocked($mails) {}
+function bounce_bounce_mails_unblocked($mails) {
+
+}

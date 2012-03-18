@@ -5,9 +5,11 @@
  * Administrative pages and functionality.
  */
 
-//-----------------------------------------------------------------------
-// Admin form page for general settings and configuration
-//-----------------------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Admin form page for general settings and configuration.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Form constructor for the Bounce module general settings.
@@ -34,7 +36,7 @@ function bounce_admin_settings($form, &$form_state) {
   $form['components'] = array(
     '#type' => 'fieldset',
     '#title' => t('Component settings'),
-  	'#description' => t('Choose the components used by this module.'),
+    '#description' => t('Choose the components used by this module.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
@@ -161,6 +163,7 @@ function bounce_admin_settings_validate($form, &$form_state) {
  *
  * @param string $component_type
  *   A component type, i.e. 'blocker', 'connector', 'analyst'.
+ *
  * @return array
  *   An associative array of component titles indexed by component machine
  *   name.
@@ -174,9 +177,11 @@ function bounce_component_options($component_type) {
   return $options;
 }
 
-//-----------------------------------------------------------------------
-// Admin form page for component configuration
-//-----------------------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Admin form page for component configuration.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * This form constructor is simply a pass-through to pick up a configuration
@@ -192,11 +197,11 @@ function bounce_admin_component_configuration($form, &$form_state, $component_ty
   return $form;
 }
 
-
-//-----------------------------------------------------------------------
-// Admin form page for blocked emails
-//-----------------------------------------------------------------------
-
+/*
+ -----------------------------------------------------------------------
+ Admin form page for blocked emails.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Form constructor for the admin page displaying blocked emails, and allowing
@@ -417,9 +422,11 @@ function bounce_admin_unblock_mails($form, &$form_state) {
   module_invoke_all('bounce_mails_unblocked', $mails);
 }
 
-//-----------------------------------------------------------------------
-// Admin pages for viewing non-delivery reports
-//-----------------------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Admin pages for viewing non-delivery reports.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * A page callback for the list of all non-delivery reports.
@@ -432,12 +439,19 @@ function bounce_admin_view_non_delivery_report_list() {
     t('Analyst'),
     t('Code'),
     t('Used to Block?'),
-    t('View Report')
+    t('View Report'),
   );
   $rows = array();
   $query = db_select('bounce_non_delivery_report', 'ndr');
   $query->leftJoin('users', 'u', 'ndr.mail = u.mail');
-  $result = $query->fields('ndr', array('report_id', 'mail', 'code', 'analyst', 'status', 'created'))
+  $result = $query->fields('ndr', array(
+  	'report_id',
+  	'mail',
+  	'code',
+  	'analyst',
+  	'status',
+  	'created',
+  ))
     ->fields('u', array('name', 'uid'))
     ->orderBy('ndr.created', 'ASC')
     ->extend('PagerDefault')
@@ -463,14 +477,14 @@ function bounce_admin_view_non_delivery_report_list() {
     '#header' => $header,
     '#rows' => $rows,
     '#empty' => t(
-    	'No non-delivery reports have been received and successfully analyzed within the last @days.',
-    	array(
-    	  '@days' => format_plural(
-    	    variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS),
-    	    '1 day',
-    	    '@count days'
-    	  ),
-    	)
+      'No non-delivery reports have been received and successfully analyzed within the last @days.',
+      array(
+        '@days' => format_plural(
+          variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS),
+          '1 day',
+          '@count days'
+        ),
+      )
     ),
   );
   return $page;
@@ -481,8 +495,8 @@ function bounce_admin_view_non_delivery_report_list() {
  * loads the text of the report emails via ajax.
  *
  * @param array $blocked_mail
- *   A associative array containing the column names and values for a single row from the
- *   bounce_blocked table.
+ *   A associative array containing the column names and values for a single
+ *   row from the bounce_blocked table.
  */
 function bounce_admin_view_blocked_mail($blocked_mail) {
   drupal_set_title(t('View non-delivery reports for @mail', array('@mail' => $blocked_mail['mail'])));
@@ -543,7 +557,7 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
     '#tag' => 'div',
     '#attributes' => array(
       'id' => 'bounce-report-wrapper',
-     ),
+    ),
   );
 
   return $page;

@@ -372,7 +372,7 @@ class BounceMailServerConnector {
     $mail = $this->mail_get_parts($message_number, $mail, '0');
     $mail[0]['raw'] = $mail[0]['data'];
     $mail[0]['data'] = $this->parse_mail_headers_into_array($mail[0]['raw']);
-    if(!isset($mail[0]['charset'])) {
+    if (!isset($mail[0]['charset'])) {
       // Probably wrong, but better than nothing.
       $mail[0]['charset'] = 'utf-8';
     };
@@ -392,9 +392,11 @@ class BounceMailServerConnector {
     return $mail;
   }
 
-  //---------------------------------------------------
-  // Utility functions from here on down
-  //---------------------------------------------------
+  /*
+   -----------------------------------------------------------------------
+   Utility functions from here on down.
+   -----------------------------------------------------------------------
+  */
 
   /**
    * Return the connection string for the mailbox, of the form:
@@ -443,7 +445,7 @@ class BounceMailServerConnector {
      $headers = preg_replace('/\r\n\s+/m', '', $headers);
      preg_match_all('/([^: ]+): (.+?(?:\r\n\s(?:.+?))*)?\r\n/m', $headers, $matches);
      $result = array();
-     foreach( $matches[1] as $key => $value ) {
+     foreach ( $matches[1] as $key => $value ) {
         $result[$value] = $matches[2][$key];
      }
      return $result;
@@ -544,12 +546,14 @@ class BounceMailServerConnector {
     return $attachment;
   }
 
-  //---------------------------------------------------
-  // Wrapper methods for IMAP functions.
-  //---------------------------------------------------
+  /*
+   -----------------------------------------------------------------------
+   Wrapper methods for IMAP functions.
 
-  // These functions are wrapped to allow overriding in child classes, e.g. for
-  // testing without the need for a mailserver.
+   These functions are wrapped to allow overriding in child classes, e.g. for
+   testing without the need for a mailserver.
+   -----------------------------------------------------------------------
+  */
 
   /**
    * Wrapper method.

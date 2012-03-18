@@ -17,6 +17,9 @@ class BounceTestCase extends DrupalWebTestCase {
     );
   }
 
+  /**
+   * Overrides DrupalWebTestCase::setUp().
+   */
   public function setUp() {
     $modules_to_enable = array('bounce');
     parent::setUp($modules_to_enable);
@@ -116,6 +119,9 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->admin_user = $this->drupalCreateUser(array('administer email non-delivery report processing'));
   }
 
+  /**
+   * Overrides DrupalWebTestCase::tearDown().
+   */
   public function tearDown() {
     // Given that the simpletest database tables established for this test
     // will be destroyed, there should be no need to clean up here.
@@ -180,7 +186,11 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
 
     $text = 'Mr. A <mra@example.com>, Mr. B <mrb@example.com>, moremail@example.com';
-    $result = array('mra@example.com', 'mrb@example.com', 'moremail@example.com');
+    $result = array(
+      'mra@example.com',
+      'mrb@example.com',
+      'moremail@example.com',
+    );
     $this->assertIdentical($result, _bounce_mails_from_text($text));
     $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
 
@@ -190,9 +200,16 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
 
     $text = 'Mr. A <mra@example.com>, Mr. A <mra@example.com>, Mr. B <mrb@example.com>';
-    $result = array('mra@example.com', 'mra@example.com', 'mrb@example.com');
+    $result = array(
+      'mra@example.com',
+      'mra@example.com',
+      'mrb@example.com',
+    );
     $this->assertIdentical($result, _bounce_mails_from_text($text));
-    $result = array('mra@example.com', 'mrb@example.com');
+    $result = array(
+      'mra@example.com',
+      'mrb@example.com',
+    );
     $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
   }
 
@@ -1068,9 +1085,9 @@ class BounceTestCase extends DrupalWebTestCase {
 
     // Send a mail so that it ends up in bounce_sent as a sent record.
      $context = array(
-      'recipient' => $email,
-      'subject' => 'test 1',
-      'message' => 'test 1',
+       'recipient' => $email,
+       'subject' => 'test 1',
+       'message' => 'test 1',
     );
     system_send_email_action(NULL, $context);
 
@@ -1129,9 +1146,9 @@ class BounceTestCase extends DrupalWebTestCase {
 
     // Send a mail so that it ends up in bounce_sent as a sent record.
      $context = array(
-      'recipient' => $email,
-      'subject' => 'test 1',
-      'message' => 'test 1',
+       'recipient' => $email,
+       'subject' => 'test 1',
+       'message' => 'test 1',
     );
     system_send_email_action(NULL, $context);
 
@@ -1166,12 +1183,6 @@ class BounceTestCase extends DrupalWebTestCase {
 
 }
 
-
-
-//------------------------------------------------------------------------
-
-
-
 /**
  * A class to test the test harness functions in the
  * BounceTestMailServerConnector.
@@ -1185,6 +1196,9 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
     );
   }
 
+  /**
+   * Overrides DrupalWebTestCase::setUp().
+   */
   public function setUp() {
     parent::setUp();
     $params = array(
@@ -1229,6 +1243,9 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
     $this->assertIdentical($mailbox[2]['msgno'], 2);
   }
 
+  /**
+   * Overrides DrupalWebTestCase::tearDown().
+   */
   public function tearDown() {
     // Test deletion here.
     $mailbox = $this->connector->__load_mailbox();
@@ -1276,7 +1293,7 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
     $body = $this->connector->imap_body(1);
 
     $expected_body = array();
-    foreach($this->mail_1['parts'] as $part) {
+    foreach ($this->mail_1['parts'] as $part) {
       if (is_string($part['data'])) {
         $expected_body[] = $part['data'];
       }

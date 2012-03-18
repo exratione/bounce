@@ -6,9 +6,12 @@
  * recipient email address and a code for the report.
  */
 
-//---------------------------------------------------------------------------------
-// General analysis functions that are not a part of the default analyst component.
-//---------------------------------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ General analysis functions that are not a part of the default analyst
+ component.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Store the results of an analysis if it contains anything worth storing. The
@@ -25,6 +28,7 @@
  *   The analysis array to be stored.
  * @param string $analyst
  *   The machine name of the analyst component that performed the analysis.
+ *
  * @param array $report
  *   The non-delivery report mail as an array data structure.
  */
@@ -49,6 +53,8 @@ function bounce_record_non_delivery_report_analysis($analysis, $analyst, $report
  * )
  *
  * @param array $analysis
+ *   The analysis array as described above.
+ *
  * @return boolean
  *   TRUE if the analysis array is complete, FALSE otherwise.
  */
@@ -56,9 +62,11 @@ function bounce_is_complete_non_delivery_report_analysis($analysis) {
   return isset($analysis['code']) && $analysis['code'] && isset($analysis['mail']) && $analysis['mail'];
 }
 
-//---------------------------------------------------------------------------------
-// Callback functions for the default analyst component
-//---------------------------------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Callback functions for the default analyst component.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Callback function for the default analyst component.
@@ -96,6 +104,7 @@ function bounce_is_complete_non_delivery_report_analysis($analysis) {
  *
  * @param array $report
  *   The non-delivery report mail as an array.
+ *
  * @return array
  *   The analysis of the report.
  */
@@ -107,7 +116,7 @@ function bounce_analyze_non_delivery_report($report) {
   );
 
   // Is this a valid and useful report?
-  if( !is_array($report) || count($report) < 2 ) {
+  if (!is_array($report) || count($report) < 2) {
     return $analysis;
   }
 
@@ -122,7 +131,7 @@ function bounce_analyze_non_delivery_report($report) {
   }
   // Autoreplies are surprisingly common ('out of office, contact later').
   // People need to stop doing this; it just generates clutter.
-  if(bounce_analysis_is_autoreply($headers)) {
+  if (bounce_analysis_is_autoreply($headers)) {
     $analysis['code'] = 'autoreply';
   }
 
@@ -191,7 +200,7 @@ function bounce_analyze_non_delivery_report($report) {
         $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_mails, $mails);
         // Note that the return will be empty if the two highest counts are
         // tied - unlikely, but you never know.
-        if($email) {
+        if ($email) {
           $analysis['mail'] = $email;
         }
         // Return in either case.
@@ -237,9 +246,12 @@ function bounce_analyze_non_delivery_report($report) {
 }
 
 /**
+ * Check to see if the email is an autoreply, based on the headers.
+ *
  * @param array $headers
  *   A header associative array for a non-delivery report, values indexed by
  *   names.
+ *
  * @return boolean
  *   TRUE if the headers indicate this to be an autoreply mail.
  */
@@ -259,6 +271,8 @@ function bounce_analysis_is_autoreply($headers) {
  * sophistication if all you want is to avoid looking like a spam source.
  *
  * @param string $text
+ *   The text that may contain a non-delivery code.
+ *
  * @return string
  *   The first matched response code or an empty string if none found.
  */
@@ -318,12 +332,13 @@ function bounce_analysis_code_from_text($text) {
  *
  * @param array $report
  *   A non-delivery report data structure.
- * @param array $filter_emails
- *   An indexed array of email addresses: if not empty, only count instances
- *   of these email addresses. Otherwise count them all.
  * @param array $ignored_emails
- *   An indexed array of email addresses. These are ignored for the purpose
+ *   (optional) An indexed array of email addresses. These are ignored for the purpose
  *   of finding the more frequently occuring email.
+ * @param array $filter_emails
+ *   (optional) An indexed array of email addresses: if not empty, only count instances
+ *   of these email addresses. Otherwise count them all.
+ *
  * @return mixed
  *   FALSE on failure to find the most frequent, or the email address
  *   otherwise.
@@ -382,15 +397,16 @@ function bounce_analysis_get_most_frequent_mail($report, $ignored_emails = array
  * through non-delivery reports.
  *
  * @return array
+ *   An indexed array of email addresses.
  */
 function bounce_analysis_ignored_mails() {
   $mails = array();
   $site_mail = variable_get('site_mail', ini_get('sendmail_from'));
-  if($site_mail) {
+  if ($site_mail) {
     $mails[] = $site_mail;
   }
   $admin = user_load(1);
-  if(isset($admin->mail) && $admin->mail) {
+  if (isset($admin->mail) && $admin->mail) {
     $mails[] = $admin->mail;
   }
   $configured_mails = explode(',', variable_get('bounce_analyst_ignored_mails', ''));
@@ -411,9 +427,11 @@ function bounce_analyst_is_configured() {
   return TRUE;
 }
 
-//------------------------------------------------------
-// Settings form for the default analyst component
-//------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Settings form for the default analyst component.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Form constructor for the default analyst component settings form.

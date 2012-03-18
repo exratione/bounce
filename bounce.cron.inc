@@ -33,7 +33,7 @@ function bounce_cron_queue_info() {
 function bounce_cron() {
   // Don't run unless the install is complete; all sorts of mischief can
   // happen.
-  if(variable_get('install_task') != 'done') {
+  if (variable_get('install_task') != 'done') {
     return;
   }
 
@@ -60,7 +60,7 @@ function bounce_cron() {
 
     // Drop the offending mails into the blocked table if they aren't there
     // already.
-    foreach($mails as $mail) {
+    foreach ($mails as $mail) {
       $count = db_select('bounce_blocked')
         ->condition('mail', $mail, '=')
         ->countQuery()

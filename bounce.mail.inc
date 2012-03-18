@@ -50,7 +50,7 @@ function bounce_mail_alter(&$message) {
     'header_id' => $header_id,
     'created' => time(),
   );
-  foreach($emails as $email) {
+  foreach ($emails as $email) {
     $data['mail'] = $email;
     drupal_write_record('bounce_sent', $data);
   }
@@ -61,6 +61,7 @@ function bounce_mail_alter(&$message) {
  *
  * @param string $to
  *   The RFC 2822 set of emails to send to.
+ *
  * @return string
  *   The amended RFC 2822 addresses string.
  */

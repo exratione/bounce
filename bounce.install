@@ -185,11 +185,11 @@ function bounce_requirements() {
   $requirements['bounce_php_imap'] = array(
     'title' => $t('PHP IMAP Extension'),
     'description' => $t('Bounce requires the PHP IMAP extension to be installed. See <a href="@url">the PHP IMAP documentation</a> for installation instructions.', array(
-      '@url' => 'http://www.php.net/manual/en/book.imap.php'
+      '@url' => 'http://www.php.net/manual/en/book.imap.php',
     )),
     'severity' => REQUIREMENT_OK,
   );
-  // check for existence of php-imap
+  // Check for existence of php-imap.
   if (!function_exists('imap_open')) {
     $requirements['bounce_php_imap']['severity'] = REQUIREMENT_ERROR;
   }
@@ -380,7 +380,8 @@ function bounce_install() {
       'description' => $t('Notification of message blocked by spam filter.'),
     ),
   );
-  $query = db_insert('bounce_code_score')->fields(array('code', 'type', 'score', 'description'));
+  $query = db_insert('bounce_code_score')
+    ->fields(array('code', 'type', 'score', 'description'));
   foreach ($values as $record) {
     $query->values($record);
   }

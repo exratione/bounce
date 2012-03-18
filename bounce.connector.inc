@@ -1,11 +1,17 @@
 <?php
 
 /**
+ * @file
+ * Functions and forms for the default connector component.
+ */
+
+/**
  * Return a connector object for use in establising a POP3, POP3S, IMAP, or
  * IMAPS connection to a mailserver.
  *
  * @param array $params
- *   Parameters for the connection.
+ *   (optional) Parameters for the connection.
+ *
  * @return object
  *   An initialized connector object.
  */
@@ -18,7 +24,7 @@ function bounce_get_mailserver_connector($params = array()) {
     'password' => '',
     'timeout' => variable_get('bounce_connector_timeout', BOUNCE_DEFAULT_CONNECTION_TIMEOUT),
     'mail_part_size_limit' => variable_get('bounce_mail_part_size_limit_bytes', BOUNCE_DEFAULT_MAIL_PART_SIZE_LIMIT_BYTES),
-    // values below are not expected to be passed in
+    // Values below are not expected to be passed in.
     'folder' => 'INBOX',
   );
 
@@ -52,10 +58,6 @@ function bounce_connector_is_configured() {
  * and retrieving non-delivery report email data from an account on that
  * server.
  *
- * @param array $account
- *   Login information for the email account.
- * @param array $params
- *   Parameters for the connection.
  * @return array
  *   An indexed array of email contents for processing - hopefully non-delivery
  *   reports.
@@ -115,6 +117,7 @@ function bounce_connect() {
  *
  * @param array $params
  *   Parameters for the connection.
+ *
  * @return array
  *   An indexed array of email contents for processing - hopefully non-delivery
  *   reports.
@@ -164,7 +167,7 @@ function bounce_connect_settings($form, &$form_state) {
     '#type' => 'password',
     '#title' => t('Password'),
     '#description' => t('The account password. Leave blank if you do not wish to change it.'),
-    '#default_value' => variable_get('bounce_connector_password', '')
+    '#default_value' => variable_get('bounce_connector_password', ''),
   );
 
   $form['connection'] = array(
@@ -238,14 +241,14 @@ function bounce_connect_settings_validate($form, &$form_state) {
     form_set_error('bounce_mail_part_size_limit_bytes', t('Maximum mail part size must be a whole number of bytes greater than zero.'));
   }
 
-  // a blank password means keep the password we have; the password field type
+  // A blank password means keep the password we have; the password field type
   // doesn't display its value so if the user doesn't change it, we'll see an
-  // empty string rather than the existing value
+  // empty string rather than the existing value.
   if (empty($form_state['values']['bounce_connector_password'])) {
     $form_state['values']['bounce_connector_password'] = variable_get('bounce_connector_password', '');
   }
 
-  if($errors = form_get_errors()) {
+  if ($errors = form_get_errors()) {
     return;
   }
 
@@ -259,7 +262,7 @@ function bounce_connect_settings_validate($form, &$form_state) {
     'mail_part_size_limit' => $values['bounce_mail_part_size_limit_bytes'],
   );
   foreach ($params as $value) {
-    if(empty($value)) {
+    if (empty($value)) {
       return;
     }
   }

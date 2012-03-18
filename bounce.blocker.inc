@@ -48,17 +48,19 @@ function bounce_blocked() {
 /**
  * Callback function to check on blocker configuration.
  *
- * @return boolean TRUE if configured.
+ * @return boolean
+ *   TRUE if configured.
  */
 function bounce_blocker_is_configured() {
   // Always configured from the get-go. Defaults are sufficient.
   return TRUE;
 }
 
-
-//------------------------------------------------------
-// Settings form for the default blocker component
-//------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Settings form for the default blocker component.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Form constructor for the blocker component settings form.
@@ -96,9 +98,11 @@ function bounce_blocker_settings_validate($form, &$form_state) {
   }
 }
 
-//-----------------------------------------------------------------------
-// Form page for scoring and codes used by the default blocker component
-//-----------------------------------------------------------------------
+/*
+ -----------------------------------------------------------------------
+ Form page for scoring and codes used by the default blocker component.
+ -----------------------------------------------------------------------
+*/
 
 /**
  * Page callback to display a table of codes and scoring.
@@ -258,7 +262,7 @@ function bounce_admin_edit_code_submit($form, &$form_state) {
     'description' => $values['description'],
   );
   if ($values['code_is_new']) {
-    // turn user input into something we can put into a path
+    // Turn user input into something we can put into a path.
     $data['code'] = bounce_admin_code_machine_name($data['code']);
     drupal_write_record('bounce_code_score', $data);
     drupal_set_message(t('The code %code has been created.', array('%code' => $data['code'])));
@@ -275,6 +279,7 @@ function bounce_admin_edit_code_submit($form, &$form_state) {
  *
  * @param string $code
  *   The user enterend code.
+ *
  * @return string
  *   A machine name version of the code.
  */
