@@ -15,20 +15,20 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   /**
    * Stores simulated error messages for imap_last_error().
    */
-  public $last_error_message = FALSE;
+  public $lastErrorMessage = FALSE;
 
   /**
    * Boolean switch for simulating failure of imap_close().
    */
-  public $fail_imap_close = FALSE;
+  public $failImapClose = FALSE;
   /**
    * Boolean switch for simulating failure of imap_open().
    */
-  public $fail_imap_open = FALSE;
+  public $failImapOpen = FALSE;
   /**
    * Boolean switch for simulating failure of imap_timeout().
    */
-  public $fail_imap_timeout = FALSE;
+  public $failImapTimeout = FALSE;
 
   /**
    * Overrides BounceMailServerConnector::__construct().
@@ -46,7 +46,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   /**
    * The upper level overview data for a mail.
    */
-  public $mail_overview_generic = array(
+  public $mailOverviewGeneric = array(
 
     // Overview fields
     'subject' => 'the messages subject - irrelevant here since it is not used for analysis',
@@ -90,7 +90,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    * @return array
    *   A mail data structure for the fake mailbox.
    */
-  public function __generateSMTPNonDeliveryReport($smtp_code, $recipient_email_address) {
+  public function generateSMTPNonDeliveryReport($smtp_code, $recipient_email_address) {
     $parts = array();
     // Headers are largely irrelevant for our purposes, so use dummy values.
     $headers_part = array(
@@ -115,7 +115,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       'charset' => 'utf-8',
     );
 
-    $report = $this->mail_overview_generic;
+    $report = $this->mailOverviewGeneric;
     $report['parts'] = $parts;
     return $report;
   }
@@ -132,7 +132,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    * @return array
    *   The mailbox.
    */
-  public function __load_mailbox() {
+  public function loadMailbox() {
     return variable_get('bounce_test_connector_mailbox', array());
   }
 
@@ -141,22 +141,22 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    *
    * @param array $mailbox
    */
-  public function __store_mailbox($mailbox) {
+  public function storeMailbox($mailbox) {
     variable_set('bounce_test_connector_mailbox', $mailbox);
   }
 
   /**
    * Reset the mailbox for a new test run.
    */
-  public function __reset_mailbox() {
+  public function resetMailbox() {
     variable_set('bounce_test_connector_mailbox', array());
   }
 
   /**
    * Remove all messages from the fake mailbox.
    */
-  public function __removeMessagesFlaggedForDeletion() {
-    $mailbox = $this->__load_mailbox();
+  public function removeMessagesFlaggedForDeletion() {
+    $mailbox = $this->loadMailbox();
     foreach ($mailbox as $index => $mail) {
       if ($mail['deleted']) {
         unset($mailbox[$index]);
@@ -173,7 +173,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
         $ordered_mailbox[] = $mail;
       }
     }
-    $this->__store_mailbox($ordered_mailbox);
+    $this->storeMailbox($ordered_mailbox);
   }
 
   /**
@@ -181,8 +181,8 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    *
    * @param array $mail
    */
-  public function __deliverMail($mail) {
-    $mailbox = $this->__load_mailbox();
+  public function deliverMail($mail) {
+    $mailbox = $this->loadMailbox();
     // Machinations to ensure the index is 1-based.
     if (empty($mailbox)) {
       $index = 1;
@@ -193,7 +193,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     $mail['msgno'] = $index;
     $mail['deleted'] = FALSE;
     $mailbox[$index] = $mail;
-    $this->__store_mailbox($mailbox);
+    $this->storeMailbox($mailbox);
   }
 
   /*
@@ -211,24 +211,24 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   public $folder = NULL;
 
   /**
-   * Overrides BounceMailServerConnector::parse_mail_headers_into_array().
+   * Overrides BounceMailServerConnector::parseMailHeadersIntoArray().
    */
-  public function parse_mail_headers_into_array($headers) {
-    return parent::parse_mail_headers_into_array($headers);
+  public function parseMailHeadersIntoArray($headers) {
+    return parent::parseMailHeadersIntoArray($headers);
   }
 
   /**
-   * Overrides BounceMailServerConnector::mail_get_parts().
+   * Overrides BounceMailServerConnector::mailGetParts().
    */
-  public function mail_get_parts($message_number, $part, $prefix) {
-    return parent::mail_get_parts($message_number, $part, $prefix);
+  public function mailGetParts($message_number, $part, $prefix) {
+    return parent::mailGetParts($message_number, $part, $prefix);
   }
 
   /**
-   * Overrides BounceMailServerConnector::mail_decode_part().
+   * Overrides BounceMailServerConnector::mailDecodePart().
    */
-  public function mail_decode_part($message_number, $part, $prefix) {
-    return parent::mail_decode_part($message_number, $part, $prefix);
+  public function mailDecodePart($message_number, $part, $prefix) {
+    return parent::mailDecodePart($message_number, $part, $prefix);
   }
 
   /*
@@ -239,14 +239,14 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   */
 
   /**
-   * Overrides BounceMailServerConnector::imap_body().
+   * Overrides BounceMailServerConnector::imapBody().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_body()
    */
-  public function imap_body($message_number, $options = NULL) {
+  public function imapBody($message_number, $options = NULL) {
     // Munge the message sections together; not terribly realistic, but fine
     // for testing here.
     //
@@ -254,7 +254,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     // reality when you try imap_body on a multipart message. But since we only
     // try imap_body on non-multipart messages that shouldn't matter all that
     // much.
-    $mailbox = $this->__load_mailbox();
+    $mailbox = $this->loadMailbox();
     if (isset($mailbox[$message_number])) {
       $body = array();
       foreach ($mailbox[$message_number]['parts'] as $part) {
@@ -268,15 +268,15 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_check().
+   * Overrides BounceMailServerConnector::imapCheck().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_check()
    */
-  public function imap_check() {
-    $mailbox = $this->__load_mailbox();
+  public function imapCheck() {
+    $mailbox = $this->loadMailbox();
     return (object)array(
       'Date' => date(DateTime::RFC2822),
       'Driver' => drupal_strtoupper($this->protocol),
@@ -287,52 +287,52 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_close().
+   * Overrides BounceMailServerConnector::imapClose().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    *  of a real server.
    *
    * @see imap_close()
    */
-  public function imap_close($flag) {
-    if ($this->fail_imap_close) {
-      $this->last_error_message = 'imap_close() set to fail';
+  public function imapClose($flag) {
+    if ($this->failImapClose) {
+      $this->lastErrorMessage = 'imap_close() set to fail';
       return FALSE;
     }
     else {
       if ($flag == CL_EXPUNGE) {
-        $this->__removeMessagesFlaggedForDeletion();
+        $this->removeMessagesFlaggedForDeletion();
       }
       return TRUE;
     }
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_delete().
+   * Overrides BounceMailServerConnector::imapDelete().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_delete()
    */
-  public function imap_delete($message_number) {
-    $mailbox = $this->__load_mailbox();
+  public function imapDelete($message_number) {
+    $mailbox = $this->loadMailbox();
     if (isset($mailbox[$message_number])) {
       $mailbox[$message_number]['deleted'] = TRUE;
     }
-    $this->__store_mailbox($mailbox);
+    $this->storeMailbox($mailbox);
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_fetch_overview().
+   * Overrides BounceMailServerConnector::imapFetchOverview().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_fetch_overview()
    */
-  public function imap_fetch_overview($range) {
-    $mailbox = $this->__load_mailbox();
+  public function imapFetchOverview($range) {
+    $mailbox = $this->loadMailbox();
     if (preg_match('/:/', $range)) {
       list($start, $end) = explode(':', $range);
       $mails = array();
@@ -356,15 +356,15 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_fetchbody().
+   * Overrides BounceMailServerConnector::imapFetchbody().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_fetchbody()
    */
-  public function imap_fetchbody($message_number, $prefix) {
-    $mailbox = $this->__load_mailbox();
+  public function imapFetchbody($message_number, $prefix) {
+    $mailbox = $this->loadMailbox();
     if (isset($mailbox[$message_number])) {
       $parts = $mailbox[$message_number]['parts'];
       $headers = array_shift($parts);
@@ -390,15 +390,15 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_fetchheader().
+   * Overrides BounceMailServerConnector::imapFetchheader().
    *
    * Wrapper method that (incompletely, probably badly) simulates the
    * response of a real server.
    *
    * @see imap_fetchheader()
    */
-  public function imap_fetchheader($message_number, $options = 0) {
-    $mailbox = $this->__load_mailbox();
+  public function imapFetchheader($message_number, $options = 0) {
+    $mailbox = $this->loadMailbox();
     if (isset($mailbox[$message_number]['parts'][0]['data'])) {
       return $mailbox[$message_number]['parts'][0]['data'];
     }
@@ -408,7 +408,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_fetchstructure().
+   * Overrides BounceMailServerConnector::imapFetchstructure().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server. Of all these wrapper functions, this is probably the one
@@ -416,8 +416,8 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    *
    * @see imap_fetchstructure()
    */
-  public function imap_fetchstructure($message_number, $options = NULL) {
-    $mailbox = $this->__load_mailbox();
+  public function imapFetchstructure($message_number, $options = NULL) {
+    $mailbox = $this->loadMailbox();
     if (isset($mailbox[$message_number])) {
       // turning a one-level array (the parts of the mail message data) into a
       // two-level structure of objects. For the purposes of this test harness,
@@ -457,27 +457,27 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_last_error().
+   * Overrides BounceMailServerConnector::imapLastError().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_last_error()
    */
-  public function imap_last_error() {
-    return $this->last_error_message;
+  public function imapLastError() {
+    return $this->lastErrorMessage;
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_mailboxmsginfo().
+   * Overrides BounceMailServerConnector::imapMailboxmsginfo().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_mailboxmsginfo()
    */
-  public function imap_mailboxmsginfo() {
-    $mailbox = $this->__load_mailbox();
+  public function imapMailboxmsginfo() {
+    $mailbox = $this->loadMailbox();
     $deleted = 0;
     foreach ($mailbox as $mail) {
       if ($mail['deleted']) {
@@ -491,22 +491,22 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       'Size' => 0, // not important for this use
       'Date' => date(DateTime::RFC2822),
       'Driver' => $this->protocol,
-      'Mailbox' => $this->get_mailbox_string(TRUE),
+      'Mailbox' => $this->getMailboxString(TRUE),
       'Recent' => count($mailbox),
     );
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_open().
+   * Overrides BounceMailServerConnector::imapOpen().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_open()
    */
-  public function imap_open($mailbox, $username, $password, $options = NULL, $n_retries = NULL) {
-    if ($this->fail_imap_open) {
-      $this->last_error_message = 'imap_open() set to fail';
+  public function imapOpen($mailbox, $username, $password, $options = NULL, $n_retries = NULL) {
+    if ($this->failImapOpen) {
+      $this->lastErrorMessage = 'imap_open() set to fail';
       return FALSE;
     }
     else {
@@ -515,16 +515,16 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /**
-   * Overrides BounceMailServerConnector::imap_timeout().
+   * Overrides BounceMailServerConnector::imapTimeout().
    *
    * Wrapper method that (incompletely, probably badly) simulates the response
    * of a real server.
    *
    * @see imap_timeout()
    */
-  public function imap_timeout($timeout_type, $timeout) {
-    if ($this->fail_imap_open) {
-      $this->last_error_message = 'imap_timeout() set to fail';
+  public function imapTimeout($timeout_type, $timeout) {
+    if ($this->failImapOpen) {
+      $this->lastErrorMessage = 'imap_timeout() set to fail';
       return FALSE;
     }
     else {

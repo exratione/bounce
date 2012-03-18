@@ -67,7 +67,7 @@ class BounceMailServerConnector {
    * Don't retrieve a message part larger than this size in bytes, as it's
    * unlikely to be text, and we're only interested in text.
    */
-  protected $max_mail_part_size_bytes = NULL;
+  protected $maxMailPartSizeBytes = NULL;
 
   /**
    * The class constructor. The provided parameter array must be of the form:
@@ -96,7 +96,7 @@ class BounceMailServerConnector {
     $this->login = $params['login'];
     $this->password = $params['password'];
     $this->folder = $params['folder'];
-    $this->max_mail_part_size_bytes = $params['mail_part_size_limit'];
+    $this->maxMailPartSizeBytes = $params['mail_part_size_limit'];
 
     switch ($params['protocol']) {
       case 'imap':
@@ -116,21 +116,21 @@ class BounceMailServerConnector {
     }
 
     // Set the connection timeouts.
-    $result = $this->imap_timeout(IMAP_OPENTIMEOUT, $params['timeout']);
+    $result = $this->imapTimeout(IMAP_OPENTIMEOUT, $params['timeout']);
     if (!$result) {
-      $this->watchdog_last_imap_error('Failed to set open timeout');
+      $this->watchdogLastImapError('Failed to set open timeout');
     }
-    $result = $this->imap_timeout(IMAP_READTIMEOUT, $params['timeout']);
+    $result = $this->imapTimeout(IMAP_READTIMEOUT, $params['timeout']);
     if (!$result) {
-      $this->watchdog_last_imap_error('Failed to set read timeout');
+      $this->watchdogLastImapError('Failed to set read timeout');
     }
-    $result = $this->imap_timeout(IMAP_WRITETIMEOUT, $params['timeout']);
+    $result = $this->imapTimeout(IMAP_WRITETIMEOUT, $params['timeout']);
     if (!$result) {
-      $this->watchdog_last_imap_error('Failed to set write timeout');
+      $this->watchdogLastImapError('Failed to set write timeout');
     }
-    $result = $this->imap_timeout(IMAP_CLOSETIMEOUT, $params['timeout']);
+    $result = $this->imapTimeout(IMAP_CLOSETIMEOUT, $params['timeout']);
     if (!$result) {
-      $this->watchdog_last_imap_error('Failed to set close timeout');
+      $this->watchdogLastImapError('Failed to set close timeout');
     }
   }
 
@@ -147,8 +147,8 @@ class BounceMailServerConnector {
     // it doesn't hurt to have it there regardless.
     $sslpart = ($this->ssl) ? 'ssl/novalidate-cert' : 'novalidate-cert';
     try {
-      $this->connection = $this->imap_open(
-        $this->get_mailbox_string(),
+      $this->connection = $this->imapOpen(
+        $this->getMailboxString(),
         $this->login,
         $this->password,
         // Why this? See https://bugs.php.net/bug.php?id=33039 and
@@ -157,7 +157,7 @@ class BounceMailServerConnector {
         OP_SILENT
       );
       if (!$this->connection) {
-        $this->watchdog_last_imap_error(t('Login failure'));
+        $this->watchdogLastImapError(t('Login failure'));
         return FALSE;
       }
       else {
@@ -166,7 +166,7 @@ class BounceMailServerConnector {
     } catch (Exception $e) {
       // Plausible to see exceptions if very bad values have been passed in,
       // such as an empty hostname string.
-      $this->watchdog_last_imap_error($e->getMessage());
+      $this->watchdogLastImapError($e->getMessage());
       return FALSE;
     }
   }
@@ -180,10 +180,10 @@ class BounceMailServerConnector {
   public function logout() {
     if ($this->connection) {
       // Close connection and delete all messages flagged for deletion.
-      $result = $this->imap_close(CL_EXPUNGE);
+      $result = $this->imapClose(CL_EXPUNGE);
       $this->connection = NULL;
       if (!$result) {
-        $this->watchdog_last_imap_error(t('Logout failure'));
+        $this->watchdogLastImapError(t('Logout failure'));
       }
       return $result;
     }
@@ -209,13 +209,13 @@ class BounceMailServerConnector {
    *
    * @return array
    */
-  public function get_mailbox_info() {
-    $check = $this->imap_mailboxmsginfo();
+  public function getMailboxInfo() {
+    $check = $this->imapMailboxmsginfo();
     if ($check) {
       return ((array) $check);
     }
     else {
-      $this->watchdog_last_imap_error(t('Failed to get mailbox info'));
+      $this->watchdogLastImapError(t('Failed to get mailbox info'));
     }
   }
 
@@ -249,19 +249,19 @@ class BounceMailServerConnector {
    * @return array
    *   The messages.
    */
-  public function list_messages($range = '') {
+  public function listMessages($range = '') {
     $result = array();
     if (!$range) {
-      $mc = $this->imap_check();
+      $mc = $this->imapCheck();
       if (!$mc) {
-        $this->watchdog_last_imap_error(t('Failed to check the mailbox for the number of messages'));
+        $this->watchdogLastImapError(t('Failed to check the mailbox for the number of messages'));
         return $result;
       }
       $range = '1:' . $mc->Nmsgs;
     }
-    $response = $this->imap_fetch_overview($range);
+    $response = $this->imapFetchOverview($range);
     if (!is_array($response)) {
-      $this->watchdog_last_imap_error(t('Failed to obtain an overview of messages'));
+      $this->watchdogLastImapError(t('Failed to obtain an overview of messages'));
       return $result;
     }
     foreach ($response as $message) {
@@ -275,20 +275,20 @@ class BounceMailServerConnector {
    * by header name.
    *
    * @param integer $message_number
-   *   An integer index key from the array returned by list_messages().
+   *   An integer index key from the array returned by listMessages().
    * @param bool $headers_as_array
    *   If true, return an array rather than the raw header string.
    * @return mixed
    *   Either a header string or the headers formed up as an array.
    */
-  public function get_message_headers($message_number, $headers_as_array = false) {
-    $headers = $this->imap_fetchheader($message_number, FT_PREFETCHTEXT);
+  public function getMessageHeaders($message_number, $headers_as_array = false) {
+    $headers = $this->imapFetchheader($message_number, FT_PREFETCHTEXT);
     if (!is_string($headers)) {
       $headers = '';
-      $this->watchdog_last_imap_error(t('Failed to retrieve the header for message number = %id', array('%id' => $message_number)));
+      $this->watchdogLastImapError(t('Failed to retrieve the header for message number = %id', array('%id' => $message_number)));
     }
     if ($headers_as_array) {
-      $headers = $this->parse_mail_headers_into_array($headers);
+      $headers = $this->parseMailHeadersIntoArray($headers);
     }
     return $headers;
   }
@@ -298,14 +298,14 @@ class BounceMailServerConnector {
    * logout() is called.
    *
    * @param integer $message_number
-   *   An integer index key from the array returned by list_messages().
+   *   An integer index key from the array returned by listMessages().
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  public function mark_message_for_deletion($message_number) {
-    $result = $this->imap_delete($message_number);
+  public function markMessageForDeletion($message_number) {
+    $result = $this->imapDelete($message_number);
     if (!$result) {
-      $this->watchdog_last_imap_error(t('Failed to delete message number = %id', array('%id' => $message_number)));
+      $this->watchdogLastImapError(t('Failed to delete message number = %id', array('%id' => $message_number)));
     }
     return $result;
   }
@@ -360,18 +360,18 @@ class BounceMailServerConnector {
    * @return array
    *   The email.
    */
-  public function get_message($message_number) {
-    $mail = $this->imap_fetchstructure($message_number);
+  public function getMessage($message_number) {
+    $mail = $this->imapFetchstructure($message_number);
     if (!is_object($mail)) {
-      $this->watchdog_last_imap_error(t('Failed to retrieve message structure for message number = %id', array('%id' => $message_number)));
+      $this->watchdogLastImapError(t('Failed to retrieve message structure for message number = %id', array('%id' => $message_number)));
       return array();
     }
 
-    // $this->mail_get_parts() will chase down all the components of a
+    // $this->mailGetParts() will chase down all the components of a
     // multi-part mail, but only return the headers of a single part mail.
-    $mail = $this->mail_get_parts($message_number, $mail, '0');
+    $mail = $this->mailGetParts($message_number, $mail, '0');
     $mail[0]['raw'] = $mail[0]['data'];
-    $mail[0]['data'] = $this->parse_mail_headers_into_array($mail[0]['raw']);
+    $mail[0]['data'] = $this->parseMailHeadersIntoArray($mail[0]['raw']);
     if (!isset($mail[0]['charset'])) {
       // Probably wrong, but better than nothing.
       $mail[0]['charset'] = 'utf-8';
@@ -379,9 +379,9 @@ class BounceMailServerConnector {
 
     // So if it is only a single part mail, we have to go and fetch the body.
     if (count($mail) == 1) {
-      $body = $this->imap_body($message_number);
+      $body = $this->imapBody($message_number);
       if (!is_string($body)) {
-        $this->watchdog_last_imap_error(t('Failed to retrieve message body for message number = %id', array('%id' => $message_number)));
+        $this->watchdogLastImapError(t('Failed to retrieve message body for message number = %id', array('%id' => $message_number)));
       }
       $mail[] = array(
         'data' => $body,
@@ -409,7 +409,7 @@ class BounceMailServerConnector {
    * @return string
    *   The connection string.
    */
-  protected function get_mailbox_string($with_user = FALSE) {
+  protected function getMailboxString($with_user = FALSE) {
     $inner = $this->server . ':' . $this->port . '/' . $this->protocol . '/';
     $inner .= ($this->ssl) ? 'ssl/novalidate-cert' : 'novalidate-cert';
     if ($with_user) {
@@ -423,8 +423,8 @@ class BounceMailServerConnector {
    *
    * @param string $message
    */
-  protected function watchdog_last_imap_error($message) {
-    $error = $this->imap_last_error();
+  protected function watchdogLastImapError($message) {
+    $error = $this->imapLastError();
     if ($error) {
       watchdog('bounce', '%message : %error', array('%message' => $message, '%error' => $error), WATCHDOG_ERROR);
     }
@@ -441,7 +441,7 @@ class BounceMailServerConnector {
    * @return array
    *   An associated array of name-value pairs.
    */
-  protected function parse_mail_headers_into_array($headers) {
+  protected function parseMailHeadersIntoArray($headers) {
      $headers = preg_replace('/\r\n\s+/m', '', $headers);
      preg_match_all('/([^: ]+): (.+?(?:\r\n\s(?:.+?))*)?\r\n/m', $headers, $matches);
      $result = array();
@@ -463,9 +463,9 @@ class BounceMailServerConnector {
    * @return array
    *   The parts of the mail as an array.
    */
-  protected function mail_get_parts($message_number, $part, $prefix) {
+  protected function mailGetParts($message_number, $part, $prefix) {
     $attachments = array();
-    $attachments[$prefix] = $this->mail_decode_part($message_number, $part, $prefix);
+    $attachments[$prefix] = $this->mailDecodePart($message_number, $part, $prefix);
     if (isset($part->parts)) {
       // This is multipart.
       $prefix = ($prefix == '0') ? '' : $prefix . '.';
@@ -474,7 +474,7 @@ class BounceMailServerConnector {
           $attachments,
           // The $index below should be 0-based, but what needs to be passed
           // into the server is 1-based, hence the + 1.
-          $this->mail_get_parts($message_number, $subpart, $prefix . ($index + 1))
+          $this->mailGetParts($message_number, $subpart, $prefix . ($index + 1))
         );
       }
     }
@@ -493,7 +493,7 @@ class BounceMailServerConnector {
    * @return array
    *   The part data.
    */
-  protected function mail_decode_part($message_number, $part, $prefix) {
+  protected function mailDecodePart($message_number, $part, $prefix) {
     $attachment = array();
 
     if (isset($part->ifdparameters) && $part->ifdparameters) {
@@ -522,14 +522,14 @@ class BounceMailServerConnector {
     //
     // Note that if it has sub-parts, the byte count should be a sum of subpart
     // byte counts, so ignore it.
-    if (!isset($part->parts) && isset($part->bytes) && $part->bytes > $this->max_mail_part_size_bytes) {
+    if (!isset($part->parts) && isset($part->bytes) && $part->bytes > $this->maxMailPartSizeBytes) {
       $attachment['data'] = t('Mail part too large to consider: @bytes bytes', array('@bytes' => $part->bytes));
       return $attachment;
     }
 
-    $data = $this->imap_fetchbody($message_number, $prefix);
+    $data = $this->imapFetchbody($message_number, $prefix);
     if (!is_string($data)) {
-      $this->watchdog_last_imap_error(t('Failed to retrieve message structure for message number = %id', array('%id' => $message_number)));
+      $this->watchdogLastImapError(t('Failed to retrieve message structure for message number = %id', array('%id' => $message_number)));
       $attachment['data'] = '';
     }
     else {
@@ -560,7 +560,7 @@ class BounceMailServerConnector {
    *
    * @see imap_body()
    */
-  protected function imap_body($message_number, $options = NULL) {
+  protected function imapBody($message_number, $options = NULL) {
     return imap_body($this->connection, $message_number, $options);
   }
 
@@ -569,7 +569,7 @@ class BounceMailServerConnector {
    *
    * @see imap_check()
    */
-  protected function imap_check() {
+  protected function imapCheck() {
     return imap_check($this->connection);
   }
 
@@ -578,7 +578,7 @@ class BounceMailServerConnector {
    *
    * @see imap_close()
    */
-  protected function imap_close($flag) {
+  protected function imapClose($flag) {
     return imap_close($this->connection, $flag);
   }
 
@@ -587,7 +587,7 @@ class BounceMailServerConnector {
    *
    * @see imap_delete()
    */
-  protected function imap_delete($message_number) {
+  protected function imapDelete($message_number) {
     return imap_delete($this->connection, $message_number);
   }
 
@@ -596,7 +596,7 @@ class BounceMailServerConnector {
    *
    * @see imap_fetch_overview()
    */
-  protected function imap_fetch_overview($range) {
+  protected function imapFetchOverview($range) {
     return imap_fetch_overview($this->connection, $range);
   }
 
@@ -605,7 +605,7 @@ class BounceMailServerConnector {
    *
    * @see imap_fetchbody()
    */
-  protected function imap_fetchbody($message_number, $prefix) {
+  protected function imapFetchbody($message_number, $prefix) {
     return imap_fetchbody($this->connection, $message_number, $prefix);
   }
 
@@ -614,7 +614,7 @@ class BounceMailServerConnector {
    *
    * @see imap_fetchheader()
    */
-  protected function imap_fetchheader($message_number, $options = 0) {
+  protected function imapFetchheader($message_number, $options = 0) {
     return imap_fetchheader($this->connection, $message_number, $options);
   }
 
@@ -623,7 +623,7 @@ class BounceMailServerConnector {
    *
    * @see imap_fetchstructure()
    */
-  protected function imap_fetchstructure($message_number, $options = NULL) {
+  protected function imapFetchstructure($message_number, $options = NULL) {
     return imap_fetchstructure($this->connection, $message_number, $options);
   }
 
@@ -632,7 +632,7 @@ class BounceMailServerConnector {
    *
    * @see imap_last_error()
    */
-  protected function imap_last_error() {
+  protected function imapLastError() {
     return imap_last_error();
   }
 
@@ -641,7 +641,7 @@ class BounceMailServerConnector {
    *
    * @see imap_mailboxmsginfo()
    */
-  protected function imap_mailboxmsginfo() {
+  protected function imapMailboxmsginfo() {
     return imap_mailboxmsginfo($this->connection);
   }
 
@@ -650,7 +650,7 @@ class BounceMailServerConnector {
    *
    * @see imap_open()
    */
-  protected function imap_open($mailbox, $username, $password, $options = NULL, $n_retries = NULL) {
+  protected function imapOpen($mailbox, $username, $password, $options = NULL, $n_retries = NULL) {
     return imap_open($mailbox, $username, $password, $options, $n_retries);
   }
 
@@ -659,7 +659,7 @@ class BounceMailServerConnector {
    *
    * @see imap_timeout()
    */
-  protected function imap_timeout($timeout_type, $timeout) {
+  protected function imapTimeout($timeout_type, $timeout) {
     return imap_timeout($timeout_type, $timeout);
   }
 }

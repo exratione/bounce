@@ -83,11 +83,11 @@ function bounce_connect() {
   $connector = bounce_get_mailserver_connector($params);
   $limit = variable_get('bounce_connector_max_reports_per_session', BOUNCE_DEFAULT_MAX_REPORTS_PER_SESSION);
   if ($connector->login()) {
-    $info = $connector->get_mailbox_info();
+    $info = $connector->getMailboxInfo();
     if (!empty($info['Nmsgs'])) {
       $limit = min($limit, $info['Nmsgs']);
       for ($message_number = 1; $message_number <= $limit; $message_number++) {
-         $message = $connector->get_message($message_number);
+         $message = $connector->getMessage($message_number);
          /*
           // has the following format:
           $message = array(
@@ -103,7 +103,7 @@ function bounce_connect() {
           )
           */
          $reports[] = $message;
-         $connector->mark_message_for_deletion($message_number);
+         $connector->markMessageForDeletion($message_number);
       }
     }
     $connector->logout();

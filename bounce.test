@@ -45,7 +45,7 @@ class BounceTestCase extends DrupalWebTestCase {
       'timeout' => 5,
       'mail_part_size_limit' => 20480,
     ));
-    $this->connector->__reset_mailbox();
+    $this->connector->resetMailbox();
 
     // A dummy header array.
     $this->dummy_headers_array = array(
@@ -139,47 +139,47 @@ class BounceTestCase extends DrupalWebTestCase {
     bounce_include('mail');
 
     // Unit tests.
-    $this->_testBounceEmailsFromText();
-    $this->_testConnectorParseMailHeaders();
-    $this->_testAnalystCountMails();
-    $this->_testAnalystIgnoredMails();
-    $this->_testAnalystIsCompleteAnalysis();
-    $this->_testAnalystCodeFromText();
-    $this->_testAnalystIsAutoreply();
+    $this->runTestBounceEmailsFromText();
+    $this->runTestConnectorParseMailHeaders();
+    $this->runTestAnalystCountMails();
+    $this->runTestAnalystIgnoredMails();
+    $this->runTestAnalystIsCompleteAnalysis();
+    $this->runTestAnalystCodeFromText();
+    $this->runTestAnalystIsAutoreply();
 
     // Simple needing-the-database not-quite-unit tests.
-    $this->_testBounceRemoveBlockedAddresses();
-    $this->_testHookUserLoad();
-    $this->_testDeletionOfOldData();
-    $this->_testBlockedMailNotSent();
-    $this->_testSentMailToDatabase();
-    $this->_testReportAnalysis();
+    $this->runTestBounceRemoveBlockedAddresses();
+    $this->runTestHookUserLoad();
+    $this->runTestDeletionOfOldData();
+    $this->runTestBlockedMailNotSent();
+    $this->runTestSentMailToDatabase();
+    $this->runTestReportAnalysis();
 
     // Web tests - user-facing functionality.
-    $this->_testBlockedRegistrationMessage();
-    $this->_testBlockedPasswordResetMessage();
-    $this->_testLoginAndAccountPageMessages();
+    $this->runTestBlockedRegistrationMessage();
+    $this->runTestBlockedPasswordResetMessage();
+    $this->runTestLoginAndAccountPageMessages();
 
     // Web tests - admin-facing functionality.
-    $this->_testAdminGeneralSettingsForm();
-    $this->_testAdminBlockedListForm();
-    $this->_testAdminNonDeliveryReportView();
-    $this->_testAdminConnectorSettingsForm();
-    $this->_testAdminAnalystSettingsForm();
-    $this->_testAdminBlockerSettingsForm();
-    $this->_testAdminCodesAndScoringForms();
+    $this->runTestAdminGeneralSettingsForm();
+    $this->runTestAdminBlockedListForm();
+    $this->runTestAdminNonDeliveryReportView();
+    $this->runTestAdminConnectorSettingsForm();
+    $this->runTestAdminAnalystSettingsForm();
+    $this->runTestAdminBlockerSettingsForm();
+    $this->runTestAdminCodesAndScoringForms();
 
     // Tests for mail processing and cron.
-    $this->_testConnector();
-    $this->_testProcessNonDeliveryReportQueue();
-    $this->_testBlocker();
-    $this->_testCronToBlockMail();
+    $this->runTestConnector();
+    $this->runTestProcessNonDeliveryReportQueue();
+    $this->runTestBlocker();
+    $this->runTestCronToBlockMail();
   }
 
   /**
    * Test the trivial regex-based functions for returning emails from text.
    */
-  protected function _testBounceEmailsFromText() {
+  protected function runTestBounceEmailsFromText() {
     $text = 'email@example.com';
     $result = array('email@example.com');
     $this->assertIdentical($result, _bounce_mails_from_text($text));
@@ -216,15 +216,15 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Make sure the connector can turn a header string into an array.
    */
-  protected function _testConnectorParseMailHeaders() {
-    $result = $this->connector->parse_mail_headers_into_array($this->dummy_headers_string);
+  protected function runTestConnectorParseMailHeaders() {
+    $result = $this->connector->parseMailHeadersIntoArray($this->dummy_headers_string);
     $this->assertIdentical($result, $this->dummy_headers_array);
   }
 
   /**
    * Test the analysis functions for counting the number of mails in a report.
    */
-  protected function _testAnalystCountMails() {
+  protected function runTestAnalystCountMails() {
     // Set up a dummy report structure full of mails.
     $report = array(
       array(
@@ -289,7 +289,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Test the list of ignored mails.
    */
-  protected function _testAnalystIgnoredMails() {
+  protected function runTestAnalystIgnoredMails() {
     $ignored_mails = array(
       variable_get('site_mail'),
       'ignored_1@example.com',
@@ -304,7 +304,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check on validation of a complete report analysis.
    */
-  protected function _testAnalystIsCompleteAnalysis() {
+  protected function runTestAnalystIsCompleteAnalysis() {
 
     $analysis = array();
     $this->assertFalse(bounce_is_complete_non_delivery_report_analysis($analysis));
@@ -325,7 +325,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Test extracting a non-delivery report code from text.
    */
-  protected function _testAnalystCodeFromText() {
+  protected function runTestAnalystCodeFromText() {
     $text = '500';
     $this->assertIdentical('500', bounce_analysis_code_from_text($text));
 
@@ -347,7 +347,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Is the mail header check for an autoreply working?
    */
-  protected function _testAnalystIsAutoreply() {
+  protected function runTestAnalystIsAutoreply() {
     $headers = array(
       'header1' => 'value1',
       'header2' => 'value2',
@@ -362,7 +362,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * Test the function for stripping blocked addresses from an RFC 2822
    * address string.
    */
-  protected function _testBounceRemoveBlockedAddresses() {
+  protected function runTestBounceRemoveBlockedAddresses() {
     $to = 'Mr. A <mra@example.com>, 3@example.com, To 2 <2@example.com>, moremail@example.com';
     $result = 'Mr. A <mra@example.com>, moremail@example.com';
     $this->assertIdentical($result, bounce_mail_remove_blocked_addresses($to));
@@ -379,7 +379,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check to see if hook_user_load() is doing the right thing.
    */
-  protected function _testHookUserLoad() {
+  protected function runTestHookUserLoad() {
     $blocked = user_load_by_mail('1@example.com');
     $this->assertTrue(isset($blocked->bounce_mail_blocked) && $blocked->bounce_mail_blocked === TRUE, '$account->bounce_mail_blocked is TRUE');
     $unblocked = user_load($this->unblocked_user->uid);
@@ -389,7 +389,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check to see if bounce_delete_old_data() works as advertised.
    */
-  protected function _testDeletionOfOldData() {
+  protected function runTestDeletionOfOldData() {
 
     $sent_is_old_enough_to_be_deleted = time() - 60000 - (variable_get('bounce_max_sent_age_days', BOUNCE_DEFAULT_MAX_SENT_AGE_DAYS) * 86400);
     $sent_is_not_old_enough_to_be_deleted = time() + 60000 - (variable_get('bounce_max_sent_age_days', BOUNCE_DEFAULT_MAX_SENT_AGE_DAYS) * 86400);
@@ -522,7 +522,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Make sure that mail sent is being blocked correctly.
    */
-  protected function _testBlockedMailNotSent() {
+  protected function runTestBlockedMailNotSent() {
     $context = array(
       'recipient' => 'not_blocked_at_all@example.com',
       'subject' => 'test 1',
@@ -546,7 +546,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Test that sent mail is written to the database.
    */
-  protected function _testSentMailToDatabase() {
+  protected function runTestSentMailToDatabase() {
     // Send a mail.
     $mail = 'outgoing_mail@example.com';
     $context = array(
@@ -568,7 +568,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check that various fake non-delivery reports give the expected analysis.
    */
-  protected function _testReportAnalysis() {
+  protected function runTestReportAnalysis() {
     // Insert a dummy sent record.
     $header_id_1 = $this->randomName(32);
     $mail_1 =
@@ -703,7 +703,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * Is the message correctly displayed when a registration attempt uses a
    * blocked email?
    */
-  protected function _testBlockedRegistrationMessage() {
+  protected function runTestBlockedRegistrationMessage() {
     $message = variable_get('bounce_error_on_registration_message', 'MISSING VARIABLE');
 
     $edit = array(
@@ -725,7 +725,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * Is the message correctly displayed when a password reset attempt
    * references an account with a blocked email?
    */
-  protected function _testBlockedPasswordResetMessage() {
+  protected function runTestBlockedPasswordResetMessage() {
     $message = variable_get('bounce_error_on_password_reset_message', 'MISSING VARIABLE');
 
     $edit = array(
@@ -745,7 +745,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * Check to see that the messages on login and the account page are displayed
    * for a user with a blocked email.
    */
-  protected function _testLoginAndAccountPageMessages() {
+  protected function runTestLoginAndAccountPageMessages() {
     $message = variable_get('bounce_notify_user_message', 'MISSING VARIABLE');
 
     $user = $this->blocked_user;
@@ -770,7 +770,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Make sure that the general settings form is playing ball.
    */
-  protected function _testAdminGeneralSettingsForm() {
+  protected function runTestAdminGeneralSettingsForm() {
     $this->drupalLogin($this->admin_user);
 
     $edit = array(
@@ -805,7 +805,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Put the codes and scoring admin form through its paces.
    */
-  protected function _testAdminCodesAndScoringForms() {
+  protected function runTestAdminCodesAndScoringForms() {
     $this->drupalLogin($this->admin_user);
 
     // Delete one of the pre-existing codes.
@@ -853,7 +853,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * Test the viewer for non-delivery reports associated with a specific
    * blocked mail.
    */
-  protected function _testAdminNonDeliveryReportView() {
+  protected function runTestAdminNonDeliveryReportView() {
     $this->drupalLogin($this->admin_user);
 
     // Get the view page for 1@example.com.
@@ -887,7 +887,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check the settings form for the default connector component.
    */
-  protected function _testAdminConnectorSettingsForm() {
+  protected function runTestAdminConnectorSettingsForm() {
     $this->drupalLogin($this->admin_user);
 
     $edit = array(
@@ -932,7 +932,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check the settings form for the default analyst component.
    */
-  protected function _testAdminAnalystSettingsForm() {
+  protected function runTestAdminAnalystSettingsForm() {
     $this->drupalLogin($this->admin_user);
 
     // Checkbox unchecked by default.
@@ -964,7 +964,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Put the blocked email list admin form through its paces.
    */
-  protected function _testAdminBlockedListForm() {
+  protected function runTestAdminBlockedListForm() {
     $this->drupalLogin($this->admin_user);
 
     // Make sure the form shows the emails we will delete.
@@ -1005,7 +1005,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Make sure the default blocker component form behaves as it should.
    */
-  protected function _testAdminBlockerSettingsForm() {
+  protected function runTestAdminBlockerSettingsForm() {
     $this->drupalLogin($this->admin_user);
 
     $edit = array(
@@ -1028,12 +1028,12 @@ class BounceTestCase extends DrupalWebTestCase {
    * Exercise code for retrieval of a mail from the server using the test
    * connector.
    */
-  protected function _testConnector() {
+  protected function runTestConnector() {
     // Deliver a fake non-delivery report message via the connector test class.
     $email = 'block_this_1@example.com';
     $smtp_code = '550';
-    $mail = $this->connector->__generateSMTPNonDeliveryReport($smtp_code, $email);
-    $this->connector->__deliverMail($mail);
+    $mail = $this->connector->generateSMTPNonDeliveryReport($smtp_code, $email);
+    $this->connector->deliverMail($mail);
 
     // This should return that single mail back.
     $reports = bounce_connect();
@@ -1041,7 +1041,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $report = $reports[0];
 
     // Make sure the mailbox gets emptied out.
-    $mailbox = $this->connector->__load_mailbox();
+    $mailbox = $this->connector->loadMailbox();
     $this->assertIdentical(count($mailbox), 0);
 
     // Check the report contents.
@@ -1052,8 +1052,8 @@ class BounceTestCase extends DrupalWebTestCase {
     // Do it again through the queue.
     $email = 'block_this_1@example.com';
     $smtp_code = '550';
-    $mail = $this->connector->__generateSMTPNonDeliveryReport($smtp_code, $email);
-    $this->connector->__deliverMail($mail);
+    $mail = $this->connector->generateSMTPNonDeliveryReport($smtp_code, $email);
+    $this->connector->deliverMail($mail);
 
     // This should return that single mail back and drop it into the queue.
     bounce_process_connection_queue_item(array());
@@ -1068,7 +1068,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->assertIdentical((int) ($queue->numberOfItems()), 0);
 
     // Make sure the mailbox gets emptied out.
-    $mailbox = $this->connector->__load_mailbox();
+    $mailbox = $this->connector->loadMailbox();
     $this->assertIdentical(count($mailbox), 0);
 
     // Check the report contents.
@@ -1080,7 +1080,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Exercise the code to read from the non-delivery report queue.
    */
-  protected function _testProcessNonDeliveryReportQueue() {
+  protected function runTestProcessNonDeliveryReportQueue() {
     $email = 'block_this_1@example.com';
 
     // Send a mail so that it ends up in bounce_sent as a sent record.
@@ -1093,8 +1093,8 @@ class BounceTestCase extends DrupalWebTestCase {
 
     // Create a fake non-delivery report for it.
     $smtp_code = '550';
-    $mail = $this->connector->__generateSMTPNonDeliveryReport($smtp_code, $email);
-    $this->connector->__deliverMail($mail);
+    $mail = $this->connector->generateSMTPNonDeliveryReport($smtp_code, $email);
+    $this->connector->deliverMail($mail);
 
     // Call the processor for connections to the fake server: this should
     // return that single mail back and drop it into the queue.
@@ -1126,7 +1126,7 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Test the blocker component, make sure it does what it should do.
    */
-  protected function _testBlocker() {
+  protected function runTestBlocker() {
     // at this point, block_this_1@example.com has records sitting in
     // bounce_non_delivery_report that should be enough to register as a block.
     $mails = bounce_blocked();
@@ -1141,7 +1141,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * enough configuration filled in for the various cron-called configuration
    * checks to pass, and let the functionality be exercised.
    */
-  protected function _testCronToBlockMail() {
+  protected function runTestCronToBlockMail() {
     $email = 'block_this_4@example.com';
 
     // Send a mail so that it ends up in bounce_sent as a sent record.
@@ -1154,7 +1154,7 @@ class BounceTestCase extends DrupalWebTestCase {
 
     // Deliver a fake non-delivery report message via the connector test class.
     $smtp_code = '550';
-    $this->connector->__deliverMail($this->connector->__generateSMTPNonDeliveryReport($smtp_code, $email));
+    $this->connector->deliverMail($this->connector->generateSMTPNonDeliveryReport($smtp_code, $email));
 
     // Run cron once to get the report retrieved.
     $this->cronRun();
@@ -1216,7 +1216,7 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
     $this->connector_class = 'BounceTestMailServerConnector';
     variable_set('bounce_connector_class', $this->connector_class);
     $this->connector = new $this->connector_class($params);
-    $this->connector->__reset_mailbox();
+    $this->connector->resetMailbox();
 
     foreach (array('server', 'port', 'login', 'password', 'folder') as $param) {
       $this->assertIdentical($this->connector->$param, $params[$param]);
@@ -1228,17 +1228,17 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
     $this->connector->login();
 
     // Put some mails into the mailbox.
-    $this->mail_1 = $this->connector->__generateSMTPNonDeliveryReport('550', 'test@example.com');
+    $this->mail_1 = $this->connector->generateSMTPNonDeliveryReport('550', 'test@example.com');
     $this->assertTrue(is_array($this->mail_1));
 
     $class = $this->connector_class;
 
-    $this->connector->__deliverMail($this->mail_1);
-    $mailbox = $this->connector->__load_mailbox();
+    $this->connector->deliverMail($this->mail_1);
+    $mailbox = $this->connector->loadMailbox();
     $this->assertTrue(isset($mailbox[1]));
     $this->assertIdentical($mailbox[1]['msgno'], 1);
-    $this->connector->__deliverMail($this->mail_1);
-    $mailbox = $this->connector->__load_mailbox();
+    $this->connector->deliverMail($this->mail_1);
+    $mailbox = $this->connector->loadMailbox();
     $this->assertTrue(isset($mailbox[2]));
     $this->assertIdentical($mailbox[2]['msgno'], 2);
   }
@@ -1248,22 +1248,22 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
    */
   public function tearDown() {
     // Test deletion here.
-    $mailbox = $this->connector->__load_mailbox();
+    $mailbox = $this->connector->loadMailbox();
     $this->assertFalse($mailbox[1]['deleted']);
-    $this->connector->mark_message_for_deletion(1);
-    $mailbox = $this->connector->__load_mailbox();
+    $this->connector->markMessageForDeletion(1);
+    $mailbox = $this->connector->loadMailbox();
     $this->assertTrue($mailbox[1]['deleted']);
 
     $this->assertFalse($mailbox[2]['deleted']);
-    $this->connector->mark_message_for_deletion(2);
-    $mailbox = $this->connector->__load_mailbox();
+    $this->connector->markMessageForDeletion(2);
+    $mailbox = $this->connector->loadMailbox();
     $this->assertTrue($mailbox[2]['deleted']);
 
     // This will call imap_close() wrapper with CL_EXPUNGE - so these messages
     // will be deleted.
     $this->connector->logout();
 
-    $mailbox = $this->connector->__load_mailbox();
+    $mailbox = $this->connector->loadMailbox();
     $this->assertIdentical(count($mailbox), 0);
 
     parent::tearDown();
@@ -1273,24 +1273,24 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
    * Wrap up tests in one method so that setUp / tearDown are only called once.
    */
   public function testRun() {
-    $this->_testImapBody();
-    $this->_testImapCheck();
-    $this->_testImapFetchbody();
-    $this->_testImapFetchheader();
-    $this->_testImapFetchstructure();
-    $this->_testImapMailboxmsginfo();
-    $this->_testImapFetchOverview();
-    $this->_testMailDecodePart();
-    $this->_testMailGetParts();
-    $this->_testGetMessage();
+    $this->runTestImapBody();
+    $this->runTestImapCheck();
+    $this->runTestImapFetchbody();
+    $this->runTestImapFetchheader();
+    $this->runTestImapFetchstructure();
+    $this->runTestImapMailboxmsginfo();
+    $this->runTestImapFetchOverview();
+    $this->runTestMailDecodePart();
+    $this->runTestMailGetParts();
+    $this->runTestGetMessage();
   }
 
   /**
    * Test imap_body wrapper.
    */
-  protected function _testImapBody() {
-    $this->assertNull($this->connector->imap_body(99));
-    $body = $this->connector->imap_body(1);
+  protected function runTestImapBody() {
+    $this->assertNull($this->connector->imapBody(99));
+    $body = $this->connector->imapBody(1);
 
     $expected_body = array();
     foreach ($this->mail_1['parts'] as $part) {
@@ -1308,42 +1308,42 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
   /**
    * Test the part of imap_check we care about.
    */
-  protected function _testImapCheck() {
-    $result = $this->connector->imap_check();
+  protected function runTestImapCheck() {
+    $result = $this->connector->imapCheck();
     $this->assertIdentical($result->Nmsgs, 2);
   }
 
   /**
    * Testing the imap_fetchbody wrapper function.
    */
-  protected function _testImapFetchbody() {
+  protected function runTestImapFetchbody() {
     // This should return the raw headers.
-    $body = $this->connector->imap_fetchbody(1, '0');
+    $body = $this->connector->imapFetchbody(1, '0');
     $this->assertIdentical($body, $this->mail_1['parts'][0]['data']);
 
     // And this should get the first data part.
-    $body = $this->connector->imap_fetchbody(1, '1');
+    $body = $this->connector->imapFetchbody(1, '1');
     $this->assertIdentical($body, $this->mail_1['parts'][1]['data']);
 
     // The second data part.
-    $body = $this->connector->imap_fetchbody(1, '2');
+    $body = $this->connector->imapFetchbody(1, '2');
     $this->assertIdentical($body, $this->mail_1['parts'][2]['data']);
   }
 
   /**
    * Testing the imap_fetcheader() wrapper function.
    */
-  protected function _testImapFetchheader() {
-    $header = $this->connector->imap_fetchheader(1);
+  protected function runTestImapFetchheader() {
+    $header = $this->connector->imapFetchheader(1);
     $this->assertIdentical($header, $this->mail_1['parts'][0]['data']);
   }
 
   /**
    * Testing the imap_fetchstructure wrapper function.
    */
-  protected function _testImapFetchstructure() {
+  protected function runTestImapFetchstructure() {
     // Check the first mail added to the mailbox.
-    $structure = $this->connector->imap_fetchstructure(1);
+    $structure = $this->connector->imapFetchstructure(1);
     $this->assertIdentical($structure->type, 1);
     $this->assertIdentical($structure->parts[0]->type, 0);
     $this->assertIdentical($structure->parts[0]->bytes, 23);
@@ -1354,8 +1354,8 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
   /**
    * Test the part of imap_mailboxmsginfo that we care about.
    */
-  protected function _testImapMailboxmsginfo() {
-    $result = $this->connector->imap_mailboxmsginfo();
+  protected function runTestImapMailboxmsginfo() {
+    $result = $this->connector->imapMailboxmsginfo();
     $this->assertIdentical($result->Nmsgs, 2);
     $this->assertIdentical($result->Deleted, 0);
   }
@@ -1363,8 +1363,8 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
   /**
    * Testing the imap_fetch_overview test wrapper.
    */
-  protected function _testImapFetchOverview() {
-    $overview = $this->connector->imap_fetch_overview('1');
+  protected function runTestImapFetchOverview() {
+    $overview = $this->connector->imapFetchOverview('1');
     $this->assertTrue(is_object($overview[0]));
     $this->assertIdentical($overview[0]->msgno, 1);
 
@@ -1374,9 +1374,9 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
       $this->assertIdentical($test_mail[$key], $overview[0]->$key);
     }
 
-    $overview_a = $this->connector->imap_fetch_overview('1:2');
+    $overview_a = $this->connector->imapFetchOverview('1:2');
     $this->assertIdentical(count($overview_a), 2);
-    $overview_b = $this->connector->imap_fetch_overview('1,2');
+    $overview_b = $this->connector->imapFetchOverview('1,2');
     $this->assertIdentical(count($overview_b), 2);
 
     $this->assertEqual($overview_a, $overview_b);
@@ -1385,9 +1385,9 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
   /**
    * Test the mail_decode_part function with this harness.
    */
-  protected function _testMailDecodePart() {
-    $structure = $this->connector->imap_fetchstructure(1);
-    $attachment = $this->connector->mail_decode_part(1, $structure->parts[0], '1');
+  protected function runTestMailDecodePart() {
+    $structure = $this->connector->imapFetchstructure(1);
+    $attachment = $this->connector->mailDecodePart(1, $structure->parts[0], '1');
     $this->assertIdentical($this->mail_1['parts'][1]['data'], $attachment['data']);
   }
 
@@ -1395,19 +1395,19 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
    * Test the recursive function for getting the data from a multipart mail
    * given the structure.
    */
-  protected function _testMailGetParts() {
-    $structure = $this->connector->imap_fetchstructure(1);
-    $mail = $this->connector->mail_get_parts(1, $structure, '0');
+  protected function runTestMailGetParts() {
+    $structure = $this->connector->imapFetchstructure(1);
+    $mail = $this->connector->mailGetParts(1, $structure, '0');
     $this->assertIdentical($this->mail_1['parts'][0]['data'], $mail[0]['data']);
     $this->assertIdentical($this->mail_1['parts'][1]['data'], $mail[1]['data']);
     $this->assertIdentical($this->mail_1['parts'][2]['data'], $mail[2]['data']);
   }
 
   /**
-   * Test the whole thing by running get_message().
+   * Test the whole thing by running getMessage().
    */
-  protected function _testGetMessage() {
-    $message = $this->connector->get_message(1);
+  protected function runTestGetMessage() {
+    $message = $this->connector->getMessage(1);
     $this->assertIdentical($this->mail_1['parts'][0]['data'], $message[0]['raw']);
     $this->assertIdentical($this->mail_1['parts'][1]['data'], $message[1]['data']);
     $this->assertIdentical($this->mail_1['parts'][2]['data'], $message[2]['data']);
