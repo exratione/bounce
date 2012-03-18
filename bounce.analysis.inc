@@ -21,14 +21,14 @@
  * In order to be stored, there must be both a code and mail identified.
  * 
  * @param array $analysis an analysis array
- * @param string $module the name of the module that performed the analysis
+ * @param string $analyst the machine name of the analyst component that performed the analysis
  * @param array $report the non-delivery report mail as an array data structure
  */
-function bounce_record_non_delivery_report_analysis($analysis, $module, $report) {
+function bounce_record_non_delivery_report_analysis($analysis, $analyst, $report) {
   $data = array(
     'code' => $analysis['code'],
     'mail' => $analysis['mail'],
-    'module' => $module,
+    'analyst' => $analyst,
     'report' => $report,
     'status' => BOUNCE_NDR_STATUS_UNUSED,
     'created' => time(),

@@ -78,7 +78,7 @@ function bounce_cron() {
           ->condition('mail', $mail, '=')
           ->execute();
         // and log
-        watchdog('bounce', 'Outgoing mail to %mail is now blocked.', array('%mail' => 'mail'), WATCHDOG_NOTICE);
+        watchdog('bounce', 'Outgoing mail to %mail is now blocked.', array('%mail' => $mail), WATCHDOG_INFO);
       }
     }
     // Call the hook if there were any mails to block.

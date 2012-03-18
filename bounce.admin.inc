@@ -408,6 +408,7 @@ function bounce_admin_view_non_delivery_report_list() {
     t('Mail'),
     t('User'),
     t('Timestamp'),
+    t('Analyst'),
     t('Code'),
     t('Used to Block?'),
     t('View Report')
@@ -415,7 +416,7 @@ function bounce_admin_view_non_delivery_report_list() {
   $rows = array();
   $query = db_select('bounce_non_delivery_report', 'ndr');
   $query->leftJoin('users', 'u', 'ndr.mail = u.mail');
-  $result = $query->fields('ndr')
+  $result = $query->fields('ndr', array('report_id', 'mail', 'code', 'analyst', 'status', 'created'))
     ->fields('u', array('name', 'uid'))
     ->orderBy('ndr.created', 'ASC')
     ->extend('PagerDefault')
@@ -428,7 +429,9 @@ function bounce_admin_view_non_delivery_report_list() {
       check_plain($row['mail']),
       $row['uid'] ? l($row['name'], 'user/' . $row['uid']) : t('No user with this mail'),
       format_date($row['created']),
-      ($row['status'] == BOUNCE_NDR_STATUS_USED) ? t('Yes') : '&nbsp;',
+      check_plain($row['analyst']),
+      check_plain($row['code']),
+      ($row['status'] == BOUNCE_NDR_STATUS_USED) ? t('Yes') : t('No'),
       l(t('View non-delivery report'), 'admin/config/people/bounce/ndr/nojs/' . $report_id),
     );
   }  
@@ -460,14 +463,14 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
   
   $header = array(
     t('Code'),
-    t('Module'),
+    t('Analyst'),
     t('Timestamp'),
     t('View'),
   );
   $rows = array();
   
   $reports = db_select('bounce_non_delivery_report', 'ndr')
-    ->fields('ndr', array('report_id', 'code', 'module', 'created'))
+    ->fields('ndr', array('report_id', 'code', 'analyst', 'created'))
     ->condition('ndr.mail', $blocked_mail['mail'], '=')
     ->condition('ndr.status', BOUNCE_NDR_STATUS_USED, '=')
     ->execute()
@@ -493,7 +496,7 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
     
     $rows[] = array(
       check_plain($report['code']),
-      check_plain($report['module']),
+      check_plain($report['analyst']),
       format_date($report['created']),
       $ajax_link,
     );

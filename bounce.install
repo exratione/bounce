@@ -98,8 +98,8 @@ function bounce_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'module' => array(
-        'description' => 'The name of the module that analyzed this report to determine the code.',
+      'analyst' => array(
+        'description' => 'The machine name of the analyst component that determined the code for this report.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,

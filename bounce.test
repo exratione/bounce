@@ -85,11 +85,11 @@ class BounceTestCase extends DrupalWebTestCase {
     
     // create two non-delivery reports for this blocked mail
     $query = db_insert('bounce_non_delivery_report')
-      ->fields(array('mail', 'code', 'module', 'report', 'status', 'created'))
+      ->fields(array('mail', 'code', 'analyst', 'report', 'status', 'created'))
       ->values(array(
         '1@example.com',
         '550',
-        'bounce',
+        'default',
         serialize($this->dummy_non_delivery_report),
         BOUNCE_NDR_STATUS_USED,
         time(),
@@ -97,7 +97,7 @@ class BounceTestCase extends DrupalWebTestCase {
       ->values(array(
         '1@example.com',
         '550',
-        'bounce',
+        'default',
         serialize($this->dummy_non_delivery_report),
         BOUNCE_NDR_STATUS_USED,
         time(),
@@ -401,7 +401,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $record = array(
       'mail' => '1@example.com',
       'code' => '500',
-      'module' => 'bounce',
+      'analyst' => 'default',
       'report' => array(),
       'status' => BOUNCE_NDR_STATUS_USED,
       'created' => $report_is_old_enough_to_be_deleted,
@@ -413,7 +413,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $record = array(
       'mail' => '98@example.com',
       'code' => '500',
-      'module' => 'bounce',
+      'analyst' => 'default',
       'report' => array(),
       'status' => BOUNCE_NDR_STATUS_USED,
       'created' => $report_is_old_enough_to_be_deleted,
@@ -425,7 +425,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $record = array(
       'mail' => '99@example.com',
       'code' => '500',
-      'module' => 'bounce',
+      'analyst' => 'default',
       'report' => array(),
       'status' => BOUNCE_NDR_STATUS_UNUSED,
       'created' => $report_is_not_old_enough_to_be_deleted,
@@ -437,7 +437,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $record = array(
       'mail' => '100@example.com',
       'code' => '500',
-      'module' => 'bounce',
+      'analyst' => 'default',
       'report' => array(),
       'status' => BOUNCE_NDR_STATUS_UNUSED,
       'created' => $report_is_old_enough_to_be_deleted,

@@ -314,7 +314,7 @@ function bounce_blocked_mail_load($blocked_id) {
  */
 function bounce_non_delivery_report_load($report_id) {
   $report =  db_select('bounce_non_delivery_report', 'ndr')
-    ->fields('ndr', array('report_id', 'mail', 'code', 'module', 'report', 'status', 'created'))
+    ->fields('ndr')
     ->condition('report_id', $report_id, '=')
     ->execute()
     ->fetchAssoc();
@@ -412,7 +412,7 @@ function bounce_process_non_delivery_report_queue_item($report) {
   // record the result if it merits recording
   bounce_include('analysis');
   if ($complete = bounce_is_complete_non_delivery_report_analysis($analysis)) {
-    bounce_record_non_delivery_report_analysis($analysis, $analyst['module'], $report);
+    bounce_record_non_delivery_report_analysis($analysis, $analyst, $report);
   }
 }
 
