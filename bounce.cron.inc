@@ -37,15 +37,19 @@ function bounce_cron() {
     return;
   }
 
-  // ---------------------------------------------
-  // 1) Clear out old data.
-  // ---------------------------------------------
+  /*
+   ---------------------------------------------
+   1) Clear out old data.
+   ---------------------------------------------
+  */
 
   bounce_delete_old_data();
 
-  // ---------------------------------------------
-  // 2) Block email addresses where necessary
-  // ---------------------------------------------
+  /*
+   ---------------------------------------------
+   2) Block email addresses where necessary
+   ---------------------------------------------
+  */
 
   // Start by obtaining the blocker.
   $blocker = variable_get('bounce_blocker', BOUNCE_DEFAULT_BLOCKER);
@@ -90,9 +94,11 @@ function bounce_cron() {
     }
   }
 
-  // ----------------------------------------------
-  // 3) Add a queue item to connect to the mail server
-  // ----------------------------------------------
+  /*
+   ----------------------------------------------
+   3) Add a queue item to connect to the mail server
+   ----------------------------------------------
+  */
 
   $queue = DrupalQueue::get('bounce_connection');
   $queue->createItem(array());

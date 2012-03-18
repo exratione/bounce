@@ -102,12 +102,14 @@ class BounceMailServerConnector {
       case 'imap':
         $this->protocol = 'imap';
         break;
+
       case 'imaps':
         $this->protocol = 'imap';
         $this->ssl = TRUE;
       case 'pop3':
         $this->protocol = 'pop3';
         break;
+
       case 'pop3s':
       default:
         $this->protocol = 'pop3';
@@ -208,6 +210,7 @@ class BounceMailServerConnector {
    * parameters should be fairly self-explanatory.
    *
    * @return array
+   *   An array of information.
    */
   public function getMailboxInfo() {
     $check = $this->imapMailboxmsginfo();
@@ -246,6 +249,7 @@ class BounceMailServerConnector {
    *
    * @param string $range
    *   In the form x:y e.g. 1:3 obtains messages 1, 2, and 3.
+   *
    * @return array
    *   The messages.
    */
@@ -265,7 +269,7 @@ class BounceMailServerConnector {
       return $result;
     }
     foreach ($response as $message) {
-      $result[$message->msgno] = (array)$message;
+      $result[$message->msgno] = (array) $message;
     }
     return $result;
   }
@@ -278,10 +282,11 @@ class BounceMailServerConnector {
    *   An integer index key from the array returned by listMessages().
    * @param bool $headers_as_array
    *   If true, return an array rather than the raw header string.
+   *
    * @return mixed
    *   Either a header string or the headers formed up as an array.
    */
-  public function getMessageHeaders($message_number, $headers_as_array = false) {
+  public function getMessageHeaders($message_number, $headers_as_array = FALSE) {
     $headers = $this->imapFetchheader($message_number, FT_PREFETCHTEXT);
     if (!is_string($headers)) {
       $headers = '';
@@ -299,6 +304,7 @@ class BounceMailServerConnector {
    *
    * @param integer $message_number
    *   An integer index key from the array returned by listMessages().
+   *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
@@ -357,6 +363,7 @@ class BounceMailServerConnector {
    *
    * @param integer $message_number
    *   The message identifier.
+   *
    * @return array
    *   The email.
    */
@@ -405,7 +412,8 @@ class BounceMailServerConnector {
    * {mail.host.com:995/pop3/ssl/novalidate-cert/user="us@host.com"}INBOX
    *
    * @param boolean $with_user
-   *   If TRUE, include the user="userlogin" segment
+   *   If TRUE, include the user="userlogin" segment.
+   *
    * @return string
    *   The connection string.
    */
@@ -413,7 +421,7 @@ class BounceMailServerConnector {
     $inner = $this->server . ':' . $this->port . '/' . $this->protocol . '/';
     $inner .= ($this->ssl) ? 'ssl/novalidate-cert' : 'novalidate-cert';
     if ($with_user) {
-      $inner .= '/' . '"user=' . $this->login . '"';
+      $inner .= '/"user=' . $this->login . '"';
     }
     return '{' . $inner . '}' . $this->folder;
   }
@@ -422,6 +430,7 @@ class BounceMailServerConnector {
    * Record the last error generated from the underlying IMAP functionality.
    *
    * @param string $message
+   *   The error message.
    */
   protected function watchdogLastImapError($message) {
     $error = $this->imapLastError();
@@ -438,6 +447,7 @@ class BounceMailServerConnector {
    *
    * @param string $headers
    *   The email headers as a string.
+   *
    * @return array
    *   An associated array of name-value pairs.
    */
@@ -445,7 +455,7 @@ class BounceMailServerConnector {
      $headers = preg_replace('/\r\n\s+/m', '', $headers);
      preg_match_all('/([^: ]+): (.+?(?:\r\n\s(?:.+?))*)?\r\n/m', $headers, $matches);
      $result = array();
-     foreach ( $matches[1] as $key => $value ) {
+     foreach ($matches[1] as $key => $value) {
         $result[$value] = $matches[2][$key];
      }
      return $result;
@@ -460,6 +470,8 @@ class BounceMailServerConnector {
    * @param object $part
    *   A message part.
    * @param string $prefix
+   *   Describing the position in the structure.
+   *
    * @return array
    *   The parts of the mail as an array.
    */
@@ -486,10 +498,12 @@ class BounceMailServerConnector {
    * if the part is larger than the limit.
    *
    * @param integer $message_number
-   *   The identifier for the message,
+   *   The identifier for the message.
    * @param object $part
    *   A message part.
    * @param string $prefix
+   *   Describing the position in the structure.
+   *
    * @return array
    *   The part data.
    */
@@ -500,17 +514,17 @@ class BounceMailServerConnector {
       foreach ($part->dparameters as $object) {
         $attachment[drupal_strtolower($object->attribute)] = $object->value;
         if (drupal_strtolower($object->attribute) == 'filename') {
-          $attachment['is_attachment'] = true;
+          $attachment['is_attachment'] = TRUE;
           $attachment['filename'] = $object->value;
         }
       }
     }
 
-    if (isset($part->ifparameters) && $part->ifparameters ) {
-      foreach ($part->parameters as $object ) {
+    if (isset($part->ifparameters) && $part->ifparameters) {
+      foreach ($part->parameters as $object) {
         $attachment[drupal_strtolower($object->attribute)] = $object->value;
-        if (drupal_strtolower($object->attribute) == 'name' ) {
-          $attachment['is_attachment'] = true;
+        if (drupal_strtolower($object->attribute) == 'name') {
+          $attachment['is_attachment'] = TRUE;
           $attachment['name'] = $object->value;
         }
       }
@@ -534,10 +548,12 @@ class BounceMailServerConnector {
     }
     else {
       if (isset($part->encoding)) {
-        if ($part->encoding == 3) { // 3 = BASE64
+        // 3 = BASE64.
+        if ($part->encoding == 3) {
           $attachment['data'] = base64_decode($attachment['data']);
         }
-        elseif ($part->encoding == 4) { // 4 = QUOTED-PRINTABLE
+        // 4 = QUOTED-PRINTABLE.
+        elseif ($part->encoding == 4) {
           $attachment['data'] = quoted_printable_decode($attachment['data']);
         }
       }

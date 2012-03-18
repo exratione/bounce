@@ -445,12 +445,12 @@ function bounce_admin_view_non_delivery_report_list() {
   $query = db_select('bounce_non_delivery_report', 'ndr');
   $query->leftJoin('users', 'u', 'ndr.mail = u.mail');
   $result = $query->fields('ndr', array(
-  	'report_id',
-  	'mail',
-  	'code',
-  	'analyst',
-  	'status',
-  	'created',
+    'report_id',
+    'mail',
+    'code',
+    'analyst',
+    'status',
+    'created',
   ))
     ->fields('u', array('name', 'uid'))
     ->orderBy('ndr.created', 'ASC')

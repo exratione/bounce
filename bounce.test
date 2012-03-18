@@ -9,6 +9,10 @@
  * A test case class for the Bounce module.
  */
 class BounceTestCase extends DrupalWebTestCase {
+
+  /**
+   * Declare test class information.
+   */
   public static function getInfo() {
     return array(
       'name' => 'Bounce Functionality',
@@ -253,7 +257,7 @@ class BounceTestCase extends DrupalWebTestCase {
 
     // But the second most frequent are tied, so should return false.
     $ignored_emails = array(
-      'test1@example.com'
+      'test1@example.com',
     );
     $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_emails);
     $this->assertFalse($mail);
@@ -261,7 +265,7 @@ class BounceTestCase extends DrupalWebTestCase {
     // Ignore one of them and return the other.
     $ignored_emails = array(
       'test1@example.com',
-      'test3@example.com'
+      'test3@example.com',
     );
     $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_emails);
     $this->assertIdentical($mail, 'test4@example.com');
@@ -269,18 +273,18 @@ class BounceTestCase extends DrupalWebTestCase {
     // Compare only two emails.
     $filter_emails = array(
       'test2@example.com',
-      'test3@example.com'
+      'test3@example.com',
     );
     $mail = bounce_analysis_get_most_frequent_mail($report, array(), $filter_emails);
     $this->assertIdentical($mail, 'test3@example.com');
 
     // Show we can ignore one of the filtered mails.
     $ignored_emails = array(
-      'test3@example.com'
+      'test3@example.com',
     );
     $filter_emails = array(
       'test2@example.com',
-      'test3@example.com'
+      'test3@example.com',
     );
     $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_emails, $filter_emails);
     $this->assertIdentical($mail, 'test2@example.com');
@@ -571,7 +575,6 @@ class BounceTestCase extends DrupalWebTestCase {
   protected function runTestReportAnalysis() {
     // Insert a dummy sent record.
     $header_id_1 = $this->randomName(32);
-    $mail_1 =
     $record = array(
       'header_id' => $header_id_1,
       'mail' => 'analysis_test_1@example.com',
@@ -1084,10 +1087,10 @@ class BounceTestCase extends DrupalWebTestCase {
     $email = 'block_this_1@example.com';
 
     // Send a mail so that it ends up in bounce_sent as a sent record.
-     $context = array(
-       'recipient' => $email,
-       'subject' => 'test 1',
-       'message' => 'test 1',
+    $context = array(
+      'recipient' => $email,
+      'subject' => 'test 1',
+      'message' => 'test 1',
     );
     system_send_email_action(NULL, $context);
 
@@ -1127,7 +1130,7 @@ class BounceTestCase extends DrupalWebTestCase {
    * Test the blocker component, make sure it does what it should do.
    */
   protected function runTestBlocker() {
-    // at this point, block_this_1@example.com has records sitting in
+    // At this point, block_this_1@example.com has records sitting in
     // bounce_non_delivery_report that should be enough to register as a block.
     $mails = bounce_blocked();
     $this->assertTrue(in_array('block_this_1@example.com', $mails));
@@ -1145,10 +1148,10 @@ class BounceTestCase extends DrupalWebTestCase {
     $email = 'block_this_4@example.com';
 
     // Send a mail so that it ends up in bounce_sent as a sent record.
-     $context = array(
-       'recipient' => $email,
-       'subject' => 'test 1',
-       'message' => 'test 1',
+    $context = array(
+      'recipient' => $email,
+      'subject' => 'test 1',
+      'message' => 'test 1',
     );
     system_send_email_action(NULL, $context);
 
@@ -1188,6 +1191,10 @@ class BounceTestCase extends DrupalWebTestCase {
  * BounceTestMailServerConnector.
  */
 class BounceConnectorTestCase extends DrupalWebTestCase {
+
+  /**
+   * Declare test class information.
+   */
   public static function getInfo() {
     return array(
       'name' => 'Bounce Connector Test',

@@ -6,9 +6,10 @@
  */
 
 /**
- * A test class for faking a connection to a mail server account via the IMAP package. It makes no pretensions to being
- * comprehensive or a good test for general use in connecting to a mailbox: it just fakes the small slice of IMAP package
- * functionality that is important to this module.
+ * A test class for faking a connection to a mail server account via the IMAP
+ * package. It makes no pretensions to being comprehensive or a good test for
+ * general use in connecting to a mailbox: it just fakes the small slice of
+ * IMAP package functionality that is important to this module.
  */
 class BounceTestMailServerConnector extends BounceMailServerConnector {
 
@@ -48,19 +49,19 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    */
   public $mailOverviewGeneric = array(
 
-    // Overview fields
+    // Overview fields.
     'subject' => 'the messages subject - irrelevant here since it is not used for analysis',
     'from' => 'mail-daemon@example.com',
     'to' => 'bounce@mydomain.com',
     'date' => NULL,
     'deleted' => FALSE,
 
-    // Overview fields that can or will be set later
+    // Overview fields that can or will be set later.
     /*
     'msgno'       - message sequence number in the mailbox
     */
 
-    // Overview fields we don't use but which can exist in a real mailbox
+    // Overview fields we don't use but which can exist in a real mailbox.
     /*
     'message_id' - Message-ID
     'references' - is a reference to this message id
@@ -74,8 +75,8 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     'draft' - this message is flagged as being a draft
     */
 
-    // Fields that don't exist in a real mailbox, but are here holding data
-    'parts' => NULL
+    // Fields that don't exist in a real mailbox, but are here holding data.
+    'parts' => NULL,
   );
 
   /**
@@ -87,6 +88,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    *   The code that should be extracted from the mail.
    * @param string $recipient_email_address
    *   The email address of the original recipient.
+   *
    * @return array
    *   A mail data structure for the fake mailbox.
    */
@@ -140,6 +142,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    * Store the updated mailbox.
    *
    * @param array $mailbox
+   *   The mailbox.
    */
   public function storeMailbox($mailbox) {
     variable_set('bounce_test_connector_mailbox', $mailbox);
@@ -180,6 +183,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    * Add a mail message to the fake mailbox.
    *
    * @param array $mail
+   *   A mail array as built by generateSMTPNonDeliveryReport().
    */
   public function deliverMail($mail) {
     $mailbox = $this->loadMailbox();
@@ -277,7 +281,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
    */
   public function imapCheck() {
     $mailbox = $this->loadMailbox();
-    return (object)array(
+    return (object) array(
       'Date' => date(DateTime::RFC2822),
       'Driver' => drupal_strtoupper($this->protocol),
       'Mailbox' => $this->folder,
@@ -350,7 +354,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
 
     foreach ($mails as &$mail) {
       unset($mail['parts']);
-      $mail = (object)$mail;
+      $mail = (object) $mail;
     }
     return array_values($mails);
   }
@@ -419,7 +423,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   public function imapFetchstructure($message_number, $options = NULL) {
     $mailbox = $this->loadMailbox();
     if (isset($mailbox[$message_number])) {
-      // turning a one-level array (the parts of the mail message data) into a
+      // Turning a one-level array (the parts of the mail message data) into a
       // two-level structure of objects. For the purposes of this test harness,
       // we'll treat a one-section-after-header mail as having primary body
       // type = 0 (text) and two-or-more-sections-after-header mails as having
@@ -430,21 +434,20 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       // following the headers.
       $parts = $mailbox[$message_number]['parts'];
       $headers = array_shift($parts);
-      $structure = (object)array(
-        // type 0 = text
-        'type' => 0
+      $structure = (object) array(
+        // Type 0 = text.
+        'type' => 0,
       );
       if (count($parts) > 1) {
         // Multipart (very fake, broken, lacking-vital-params multipart
         // in this case).
         $structure->type = 1;
         foreach ($parts as $index => $part) {
-          $structure->parts[] = (object)array(
+          $structure->parts[] = (object) array(
             // Text.
             'type' => 0,
-            // This should absolutely NOT be drupal_strlen - we're counting bytes,
-            // not characters.
-            // See: http://stackoverflow.com/questions/2384260/how-do-i-find-the-number-of-bytes-within-utf-8-string-with-php
+            // This should absolutely NOT be drupal_strlen - we're counting
+            // bytes, not characters.
             'bytes' => mb_strlen($part['data'], 'latin1'),
           );
         }
@@ -484,11 +487,12 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
         $deleted++;
       }
     }
-    return (object)array (
+    return (object) array(
       'Unread' => count($mailbox),
       'Deleted' => $deleted,
       'Nmsgs' => count($mailbox),
-      'Size' => 0, // not important for this use
+      // Size is not important for this use, so leave it as 0.
+      'Size' => 0,
       'Date' => date(DateTime::RFC2822),
       'Driver' => $this->protocol,
       'Mailbox' => $this->getMailboxString(TRUE),

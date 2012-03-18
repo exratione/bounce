@@ -120,9 +120,11 @@ function bounce_analyze_non_delivery_report($report) {
     return $analysis;
   }
 
-  // ---------------------------------------------------------------
-  // look through the non-delivery report email headers first
-  // ---------------------------------------------------------------
+  /*
+   ---------------------------------------------------------------
+   Look through the non-delivery report email headers first.
+   ---------------------------------------------------------------
+  */
 
   $header_part = array_shift($report);
   $headers = array();
@@ -135,9 +137,11 @@ function bounce_analyze_non_delivery_report($report) {
     $analysis['code'] = 'autoreply';
   }
 
-  // ---------------------------------------------------------------
-  // Now start in on the rest of it, and try to establish a code.
-  // ---------------------------------------------------------------
+  /*
+   ---------------------------------------------------------------
+   Now start in on the rest of it, and try to establish a code.
+   ---------------------------------------------------------------
+  */
 
   // We're looking for the identifying header from the original email that
   // generated this non-delivery report, and also any SMTP codes or other
@@ -160,9 +164,11 @@ function bounce_analyze_non_delivery_report($report) {
     return $analysis;
   }
 
-  // ---------------------------------------------------------------
-  // Now try to identify the email address for the originating email
-  // ---------------------------------------------------------------
+  /*
+   ---------------------------------------------------------------
+   Now try to identify the email address for the originating email.
+   ---------------------------------------------------------------
+  */
 
   $ignored_mails = bounce_analysis_ignored_mails();
 
@@ -333,11 +339,11 @@ function bounce_analysis_code_from_text($text) {
  * @param array $report
  *   A non-delivery report data structure.
  * @param array $ignored_emails
- *   (optional) An indexed array of email addresses. These are ignored for the purpose
- *   of finding the more frequently occuring email.
+ *   (optional) An indexed array of email addresses. These are ignored for the
+ *   purpose of finding the more frequently occuring email.
  * @param array $filter_emails
- *   (optional) An indexed array of email addresses: if not empty, only count instances
- *   of these email addresses. Otherwise count them all.
+ *   (optional) An indexed array of email addresses: if not empty, only count
+ *   instances of these email addresses. Otherwise count them all.
  *
  * @return mixed
  *   FALSE on failure to find the most frequent, or the email address
@@ -420,7 +426,8 @@ function bounce_analysis_ignored_mails() {
 /**
  * Callback function to check on analyst configuration.
  *
- * @return boolean TRUE if configured.
+ * @return boolean
+ *   TRUE if configured.
  */
 function bounce_analyst_is_configured() {
   // Always configured from the get-go. Defaults are sufficient.

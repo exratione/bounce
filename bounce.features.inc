@@ -23,7 +23,7 @@ function bounce_features_api() {
       'feature_source' => TRUE,
       'default_hook' => 'bounce_default_bounce_codes',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
-      'file' => drupal_get_path('module', 'bounce') .'/bounce.features.inc',
+      'file' => drupal_get_path('module', 'bounce') . '/bounce.features.inc',
     ),
   );
 }
@@ -52,14 +52,18 @@ function bounce_code_features_export_options() {
  * Produce the PHP code that will be saved out into the generated features
  * module produced by Features.
  *
+ * @param array $module
+ *   A module name.
  * @param array $data
  *   An array of non-delivery report codes.
  */
 function bounce_code_features_export_render($module, $data) {
 
-  // this code is basically copied from hook_features_export() implementations
-  // found in the /include/*.inc files in the features module. Look through
-  // those files for further examples of how to do this.
+  /*
+   This code is basically copied from hook_features_export() implementations
+   found in the /include/*.inc files in the features module. Look through
+   those files for further examples of how to do this.
+  */
 
   $output = array();
   $output[] = '$codes = array();';
@@ -123,9 +127,11 @@ function bounce_code_features_revert($module) {
  */
 function bounce_code_features_export($data, &$export, $module_name = '') {
 
-  // this code is basically copied from hook_features_export() implementations
-  // found in the /include/*.inc files in the features module. Look through
-  // those files for further examples of how to do this.
+  /*
+   This code is basically copied from hook_features_export() implementations
+   found in the /include/*.inc files in the features module. Look through
+   those files for further examples of how to do this.
+  */
 
   $export['dependencies']['features'] = 'features';
 

@@ -117,6 +117,7 @@ function bounce_bounce_code_type_alter(&$types) {
  * )
  *
  * @return array
+ *   An array of analyst definitions.
  */
 function bounce_bounce_analyst() {
   $analysts = array();
@@ -164,7 +165,7 @@ function bounce_bounce_analysis_alter(&$analysis, $report) {
   // For example, change the code assigned based on an examination of the
   // non-delivery report
   // $analysis['code'] = '4.1.1';
-
+  //
   // For preference you should write your own analyst component to assign
   // codes, and declare it through an implementation of hook_bounce_analyst().
   // But there will always be those times when you want to use an existing

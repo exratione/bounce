@@ -218,7 +218,7 @@ function bounce_menu() {
     'page arguments' => array(
       'bounce_admin_component_configuration',
       'connector',
-      BOUNCE_DEFAULT_CONNECTOR
+      BOUNCE_DEFAULT_CONNECTOR,
     ),
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
@@ -234,7 +234,7 @@ function bounce_menu() {
     'page arguments' => array(
       'bounce_admin_component_configuration',
       'analyst',
-      BOUNCE_DEFAULT_ANALYST
+      BOUNCE_DEFAULT_ANALYST,
     ),
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
@@ -250,7 +250,7 @@ function bounce_menu() {
     'page arguments' => array(
       'bounce_admin_component_configuration',
       'blocker',
-      BOUNCE_DEFAULT_BLOCKER
+      BOUNCE_DEFAULT_BLOCKER,
     ),
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
@@ -359,7 +359,7 @@ function bounce_blocked_mail_load($blocked_id) {
  *   A associative array for a row from the bounce_non_delivery_report table.
  */
 function bounce_non_delivery_report_load($report_id) {
-  $report =  db_select('bounce_non_delivery_report', 'ndr')
+  $report = db_select('bounce_non_delivery_report', 'ndr')
     ->fields('ndr')
     ->condition('report_id', $report_id, '=')
     ->execute()
@@ -407,7 +407,9 @@ function bounce_process_connection_queue_item($item) {
     watchdog(
       'bounce',
       'Retrieved @reports from the Return-Path account.',
-      array('@reports' => format_plural(count($reports), '1 potential non-delivery report', '@count potential non-delivery reports')),
+      array(
+        '@reports' => format_plural(count($reports), '1 potential non-delivery report', '@count potential non-delivery reports')
+      ),
       WATCHDOG_INFO
     );
     $queue = DrupalQueue::get('bounce_non_delivery_report');
@@ -633,15 +635,15 @@ function _bounce_unique_mails_from_text($text) {
  *   An array of all the emails matched, which may include duplicates.
  */
 function _bounce_mails_from_text($text) {
-   $matches = array();
-   preg_match_all("/([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})/i", $text, $matches);
-   $mails = $matches[1];
-   foreach ($mails as $index => $mail) {
-     if (!valid_email_address($mail)) {
-       unset($mails[$index]);
-     }
-   }
-   return $mails;
+  $matches = array();
+  preg_match_all("/([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})/i", $text, $matches);
+  $mails = $matches[1];
+  foreach ($mails as $index => $mail) {
+    if (!valid_email_address($mail)) {
+      unset($mails[$index]);
+    }
+  }
+  return $mails;
 }
 
 /**
@@ -651,9 +653,9 @@ function _bounce_mails_from_text($text) {
  *   A UUID.
  */
 function _bounce_generate_uuid() {
-  $uuid = sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+  $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
     // 32 bits for "time_low".
-    mt_rand(0, 0xffff ), mt_rand( 0, 0xffff),
+    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
     // 16 bits for "time_mid".
     mt_rand(0, 0xffff),
     // 16 bits for "time_hi_and_version", four most significant bits holds
