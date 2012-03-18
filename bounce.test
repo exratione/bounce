@@ -164,8 +164,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->_testConnector();
     $this->_testProcessNonDeliveryReportQueue();
     $this->_testBlocker();
-    $this->_testCronToBlockMail();
-    
+    $this->_testCronToBlockMail();   
   }
   
   /**
@@ -855,6 +854,12 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->drupalGet('admin/config/people/bounce/ndr/ajax/1');
     $this->assertRaw('"selector":"#bounce-report-wrapper"');
     $this->assertRaw($this->report_content);
+    
+    // look at the list of all non-delivery reports
+    $this->drupalGet('admin/config/people/bounce/ndr');
+    $this->assertRaw('1@example.com');
+    $this->assertLinkByHref('admin/config/people/bounce/ndr/nojs/1');
+    $this->assertLinkByHref('admin/config/people/bounce/ndr/nojs/2');
     
     $this->drupalLogout();
   }

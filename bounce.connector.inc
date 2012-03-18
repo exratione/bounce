@@ -71,7 +71,7 @@ function bounce_connect() {
   $limit = variable_get('bounce_connector_max_reports_per_session', BOUNCE_DEFAULT_MAX_REPORTS_PER_SESSION);
   if ($connector->login()) {
     $info = $connector->get_mailbox_info();
-    if ($info['Nmsgs']) {
+    if (!empty($info['Nmsgs'])) {
       $limit = min($limit, $info['Nmsgs']);
       for ($message_number = 1; $message_number <= $limit; $message_number++) {
          $message = $connector->get_message($message_number);
@@ -146,8 +146,7 @@ function bounce_connect_settings($form, &$form_state) {
   $form['connector']['bounce_connector_password'] = array(
     '#type' => 'password',
     '#title' => t('Password'),
-    '#description' => t('The account password.'),
-    '#required' => TRUE,
+    '#description' => t('The account password. Leave blank if you do not wish to change it.'),
     '#default_value' => variable_get('bounce_connector_password', '')
   );
 
@@ -217,6 +216,12 @@ function bounce_connect_settings_validate($form, &$form_state) {
   }
   if (!preg_match('/^\d+$/', $values['bounce_mail_part_size_limit_bytes']) || !$values['bounce_mail_part_size_limit_bytes']) {
     form_set_error('bounce_mail_part_size_limit_bytes', t('Maximum mail part size must be a whole number of bytes greater than zero.'));
+  }
+  
+  // a blank password means keep the password we have; the password field type doesn't display its value
+  // so if the user doesn't change it, we'll see an empty string rather than the existing value
+  if (empty($form_state['values']['bounce_connector_password'])) {
+    $form_state['values']['bounce_connector_password'] = variable_get('bounce_connector_password', '');
   }
   
   if($errors = form_get_errors()) {

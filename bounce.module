@@ -164,6 +164,17 @@ function bounce_menu() {
     'file' => 'bounce.admin.inc',
   );
   
+  // callback for the list of all non-delivery reports
+  $items['admin/config/people/bounce/ndr'] = array(
+    'title' => 'Non-Delivery Reports',
+    'description' => 'View a list of all non-delivery reports.',
+    'page callback' => 'bounce_admin_view_non_delivery_report_list',
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer email non-delivery report processing'),
+    'file' => 'bounce.admin.inc',
+    'weight' => 5,
+  );   
+  
   // callback for the data for a particular non-delivery report; the % in there will be nojs or ajax
   $items['admin/config/people/bounce/ndr/%/%bounce_non_delivery_report'] = array(
     'title' => 'View a non-delivery report',
@@ -184,7 +195,7 @@ function bounce_menu() {
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
     'file' => 'bounce.admin.inc',
-    'weight' => 5,
+    'weight' => 10,
   ); 
   
   // settings page for the selected mail server connector component
@@ -196,7 +207,7 @@ function bounce_menu() {
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
     'file' => 'bounce.admin.inc',
-    'weight' => 10,
+    'weight' => 15,
   );  
   
   // settings page for the selected non-delivery report analyst component
@@ -208,7 +219,7 @@ function bounce_menu() {
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
     'file' => 'bounce.admin.inc',
-    'weight' => 15,
+    'weight' => 20,
   );  
   
   // settings page for the selected blocker component
@@ -220,7 +231,7 @@ function bounce_menu() {
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer email non-delivery report processing'),
     'file' => 'bounce.admin.inc',
-    'weight' => 20,
+    'weight' => 25,
   );  
   
   // The default blocker component adds extra configuration pages in addition to
@@ -237,7 +248,7 @@ function bounce_menu() {
       'type' => MENU_LOCAL_TASK,
       'access arguments' => array('administer email non-delivery report processing'),
       'file' => 'bounce.blocker.inc',
-      'weight' => 25,
+      'weight' => 30,
     );   
     
     // a form to add a new code-score relationship
@@ -345,7 +356,12 @@ function bounce_process_connection_queue_item($item) {
   
   // add the non-delivery reports to the queue for processing, if we have any
   if ($reports && is_array($reports)) {
-    watchdog('bounce', 'Retrieved @count potential non-delivery reports from the Return-Path account.', array('@count' => count($reports)), WATCHDOG_INFO);
+    watchdog(
+    	'bounce', 
+    	'Retrieved @reports from the Return-Path account.', 
+      array('@reports' => format_plural(count($reports), '1 potential non-delivery report', '@count potential non-delivery reports')), 
+      WATCHDOG_INFO
+    );
     $queue = DrupalQueue::get('bounce_non_delivery_report');
     foreach ($reports as $report) {
       $queue->createItem($report);

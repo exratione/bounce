@@ -397,11 +397,59 @@ function bounce_admin_unblock_mails($form, &$form_state) {
 }
 
 //-----------------------------------------------------------------------
-// Admin page for viewing non-delivery reports associated with a blocked mail
+// Admin pages for viewing non-delivery reports
 //-----------------------------------------------------------------------
 
 /**
- * Present a table of non-delivery reports that loads the text of the report emails via ajax.
+ * A page callback for the list of all non-delivery reports.
+ */
+function bounce_admin_view_non_delivery_report_list() {
+  $header = array(
+    t('Mail'),
+    t('User'),
+    t('Timestamp'),
+    t('Code'),
+    t('Used to Block?'),
+    t('View Report')
+  );
+  $rows = array();
+  $query = db_select('bounce_non_delivery_report', 'ndr');
+  $query->leftJoin('users', 'u', 'ndr.mail = u.mail');
+  $result = $query->fields('ndr')
+    ->fields('u', array('name', 'uid'))
+    ->orderBy('ndr.created', 'ASC')
+    ->extend('PagerDefault')
+    ->limit(50)
+    ->execute()
+    ->fetchAllAssoc('report_id', PDO::FETCH_ASSOC);
+  $options = array();
+  foreach ($result as $report_id => $row) {
+    $rows[] = array(
+      check_plain($row['mail']),
+      $row['uid'] ? l($row['name'], 'user/' . $row['uid']) : t('No user with this mail'),
+      format_date($row['created']),
+      ($row['status'] == BOUNCE_NDR_STATUS_USED) ? t('Yes') : '&nbsp;',
+      l(t('View non-delivery report'), 'admin/config/people/bounce/ndr/nojs/' . $report_id),
+    );
+  }  
+  
+  $page = array();
+  $page['list'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t(
+    	'No non-delivery reports have been received and successfully analyzed within the last @days.', 
+    	array(
+    	  '@days' => format_plural(variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS), '1 day', '@count days')
+    	)
+    ),
+  );
+  return $page;
+}
+
+/**
+ * Present a table of non-delivery reports associated with a blocked mail that loads the text of the report emails via ajax.
  * 
  * @param array $blocked_mail a row from the bounce_blocked table
  */
@@ -473,11 +521,11 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
  * Page callback to view a specific non-delivery report. The result can be returned as AJAX or a normal page render array.
  * 
  * @param string $call_type ajax | nojs - is this an ajax call or not?
- * @param array $report an array representation of a row from the report table
+ * @param array $report_row an array representation of a row from the report table
  */
-function bounce_admin_view_non_delivery_report($call_type, $report) {
+function bounce_admin_view_non_delivery_report($call_type, $report_row) {
   $page = array();
-  $report = $report['report'];
+  $report = $report_row['report'];
   
   // mail headers first
   
@@ -515,7 +563,7 @@ function bounce_admin_view_non_delivery_report($call_type, $report) {
   // what we return depends on whether this is an ajax call or not
   
   if ($call_type == 'ajax') {
-    // wrap the page with the div the resulting HTML will be replacing
+    // wrap the report with the div the resulting HTML will be replacing
     $page['#prefix'] = '<div id="bounce-report-wrapper">';
     $page['#suffix'] = '</div>';
     $commands = array(
@@ -526,6 +574,8 @@ function bounce_admin_view_non_delivery_report($call_type, $report) {
       '#commands' => $commands,
     ));
   } else {
+    // set an appropriate title
+    drupal_set_title(t('Non-delivery report @id for @mail', array('@mail' => $report_row['mail'], '@id' => $report_row['report_id'])));
     return $page;
   }
 }

@@ -109,7 +109,8 @@ class BounceMailServerConnector {
       $this->connection = $this->imap_open(
         $this->get_mailbox_string(),
         $this->login, 
-        $this->password
+        $this->password,
+        OP_SILENT // Why this? See https://bugs.php.net/bug.php?id=33039 and http://www.php.net/manual/en/function.imap-open.php#73514
       ); 
       if (!$this->connection) {
         $this->watchdog_last_imap_error(t('Login failure'));
