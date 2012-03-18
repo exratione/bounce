@@ -14,11 +14,11 @@ function bounce_blocked() {
 
   $age_in_seconds = variable_get('bounce_max_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS) * 86400;
   $time = time() - $age_in_seconds;
-  
+
   // SQL to select summed non-delivery report scores greater than the threshold, but only for mails that are not already blocked,
   // and only consider non-delivery reports that have not already been used to block a mail. The latter condition takes into account
   // the case where an admin unblocks a blocked mail - we only want to reblock that mail if new non-delivery reports turn up.
-  
+
   $query = db_select('bounce_non_delivery_report', 'ndr');
   $query->innerJoin('bounce_code_score', 'cs', 'ndr.code = cs.code');
   $query->addExpression('SUM(cs.score)', 'score');
@@ -28,7 +28,7 @@ function bounce_blocked() {
   $query->groupBy('ndr.mail');
   $query->orderBy('score', 'DESC');
   $result = $query->execute();
-  
+
   $mails = array();
   $threshold = variable_get('bounce_blocker_threshold_score', BOUNCE_DEFAULT_BLOCKER_THRESHOLD_SCORE);
   while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
@@ -36,13 +36,13 @@ function bounce_blocked() {
       $mails[] = $row['mail'];
     }
   }
-  
+
   return $mails;
 }
 
 /**
  * Callback function to check on blocker configuration.
- * 
+ *
  * @return boolean TRUE if configured.
  */
 function bounce_blocker_is_configured() {
@@ -64,12 +64,12 @@ function bounce_blocker_settings($form, &$form_state) {
     '#collapsed' => FALSE,
   );
   $form['blocker']['bounce_blocker_threshold_score'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'textfield',
     '#title' => t('Threshold score'),
     '#required' => TRUE,
     '#description' => t('An email address that has accumulated at least this many points in scored non-delivery reports will be blocked. No further emails of any sort will be sent.'),
     '#default_value' => variable_get('bounce_blocker_threshold_score', BOUNCE_DEFAULT_BLOCKER_THRESHOLD_SCORE),
-  );   
+  );
   $form = system_settings_form($form);
   $form['#validate'][] = 'bounce_blocker_settings_validate';
   return $form;
@@ -79,7 +79,7 @@ function bounce_blocker_settings_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!preg_match('/^\d+$/', $values['bounce_blocker_threshold_score'])) {
     form_set_error('bounce_blocker_threshold_score', t('Threshold score must be a whole number.'));
-  } 
+  }
 }
 
 //-----------------------------------------------------------------------
@@ -120,7 +120,7 @@ function bounce_admin_scoring() {
       l(t('Delete'), 'admin/config/people/bounce/scoring/' . $code['code'] . '/delete'),
     );
   }
-  
+
   $item_list = array(
     'items' => array(
       l(t('Add new code'), 'admin/config/people/bounce/scoring/add'),
@@ -129,7 +129,7 @@ function bounce_admin_scoring() {
       'class' => array('action-links'),
     ),
   );
-  
+
   $page['add_link'] = array(
     '#prefix' => '<ul class="action-links"><li>',
     '#markup' => l(t('Add new code'), 'admin/config/people/bounce/scoring/add'),
@@ -137,7 +137,7 @@ function bounce_admin_scoring() {
   );
   $page['table'] = array(
     '#theme' => 'table',
-    '#header' => $header, 
+    '#header' => $header,
     '#rows' => $rows,
   );
 
@@ -150,31 +150,31 @@ function bounce_admin_scoring() {
 function bounce_admin_edit_code($form, &$form_state, $data = NULL) {
   if ($data) {
     $form['code_is_new'] = array(
-      '#type' => 'value', 
+      '#type' => 'value',
       '#value' => FALSE,
     );
     $form['code'] = array(
-      '#type' => 'value', 
+      '#type' => 'value',
       '#value' => $data['code'],
     );
     $form['code_item'] = array(
       '#type' => 'item',
-      '#title' => t('Code'), 
+      '#title' => t('Code'),
       '#markup' => check_plain($data['code']),
     );
   } else {
     $form['code_is_new'] = array(
-      '#type' => 'value', 
+      '#type' => 'value',
       '#value' => TRUE,
     );
     $form['code'] = array(
-      '#type' => 'textfield', 
+      '#type' => 'textfield',
       '#title' => t('Code'),
       '#required' => TRUE,
       '#description' => t('The identifying name for this code.'),
-    );    
+    );
   }
-  
+
   $form['score'] = array(
     '#type' => 'textfield',
     '#title' => t('Score'),
@@ -184,7 +184,7 @@ function bounce_admin_edit_code($form, &$form_state, $data = NULL) {
   );
   $form['type'] = array(
     '#type' => 'select',
-    '#title' => t('Type'), 
+    '#title' => t('Type'),
     '#options' => _bounce_admin_code_type_options(),
     '#default_value' => isset($data['type']) ? $data['type'] : '',
   );
@@ -194,19 +194,19 @@ function bounce_admin_edit_code($form, &$form_state, $data = NULL) {
     '#description' => t('Enter a short description for the non-delivery report code.'),
     '#default_value' => isset($data['description']) ? $data['description'] : '',
   );
-  
+
   $form['op'] = array(
     '#type' => 'submit',
     '#value' => $data ? t('Update') : t('Create'),
   );
-  
+
   return $form;
 }
 
 function bounce_admin_edit_code_validate($form, &$form_state) {
   if (!preg_match('/^\d+$/', $form_state['values']['score'])) {
     form_set_error('score', t('Score must be a whole number.'));
-  } 
+  }
   if ($form_state['values']['code_is_new']) {
     $code = bounce_admin_code_machine_name($form_state['values']['code']);
     $count = db_select('bounce_code_score')
@@ -241,9 +241,10 @@ function bounce_admin_edit_code_submit($form, &$form_state) {
 }
 
 /**
- * 
+ *
  * @param string $code
- * @return string a machine name version of the code
+ * @return string
+ *   A machine name version of the code.
  */
 function bounce_admin_code_machine_name($code) {
   return preg_replace('/[^a-z0-9_\.]+/', '_', drupal_strtolower($code));
@@ -254,7 +255,7 @@ function bounce_admin_code_machine_name($code) {
  */
 function bounce_admin_delete_code($form, &$form_state, $data) {
   $form['code'] = array(
-    '#type' => 'value', 
+    '#type' => 'value',
     '#value' => $data['code'],
   );
   return confirm_form($form,
@@ -282,7 +283,7 @@ function bounce_admin_delete_code_submit($form, &$form_state) {
 
 /**
  * Helper function to return an array of code types suitable for use in a select.
- * 
+ *
  * @return array an associative array of $type_id => $type_title
  */
 function _bounce_admin_code_type_options() {
@@ -296,4 +297,4 @@ function _bounce_admin_code_type_options() {
     }
   }
   return $options;
-}  
+}

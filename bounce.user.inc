@@ -7,7 +7,7 @@
 
 /**
  * Implements hook_user_load().
- * 
+ *
  * Add a property to the user object to show whether or not the user's email is marked blocked.
  */
 function bounce_user_load($users) {
@@ -28,7 +28,7 @@ function bounce_user_load($users) {
 
 /**
  * Implements hook_user_login().
- * 
+ *
  * If we are notifying users that their email is blocked, then do so on login.
  */
 function bounce_user_login(&$edit, $account) {
@@ -42,8 +42,8 @@ function bounce_user_login(&$edit, $account) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- * 
+ * Implements hook_form_FORM_ID_alter() for user_register_form().
+ *
  * Add a validation method to the password reset form.
  */
 function bounce_form_user_register_form_alter(&$form, &$form_state) {
@@ -68,12 +68,12 @@ function bounce_user_register_form_validate($form, &$form_state) {
     if($message && $count) {
       form_set_error('mail', check_plain($message));
     }
-  }  
+  }
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- * 
+ * Implements hook_form_FORM_ID_alter() for user_pass().
+ *
  * Add a validation method to the password reset form.
  */
 function bounce_form_user_pass_alter(&$form, &$form_state) {

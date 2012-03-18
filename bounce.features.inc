@@ -29,7 +29,7 @@ function bounce_features_api() {
 /**
  * Implements hook_features_export_options().
  *
- * This returns an options array for checkboxes shown in the form 
+ * This returns an options array for checkboxes shown in the form
  * for creating or recreating a features module. Here that just means
  * all of the non-delivery report codes from the database.
  */
@@ -49,8 +49,9 @@ function bounce_code_features_export_options() {
  *
  * Produce the PHP code that will be saved out into the generated features module
  * produced by Features.
- * 
- * @param array $data an array of non-delivery report codes
+ *
+ * @param array $data
+ *   An array of non-delivery report codes.
  */
 function bounce_code_features_export_render($module, $data) {
 
@@ -71,13 +72,13 @@ function bounce_code_features_export_render($module, $data) {
   }
   $output[] = 'return $codes;';
   $output = implode("\n", $output);
-  return array('bounce_default_bounce_codes' => $output); 
+  return array('bounce_default_bounce_codes' => $output);
 }
 
 /**
  * Implements hook_features_rebuild().
  *
- * Fairly straightforward: load all the non-delivery report code defaults from features and 
+ * Fairly straightforward: load all the non-delivery report code defaults from features and
  * update the database.
  */
 function bounce_code_features_rebuild($module) {
@@ -99,7 +100,7 @@ function bounce_code_features_rebuild($module) {
 
 /**
  * Implements hook_features_revert().
- * 
+ *
  * Reverting is the same as rebuilding in this case.
  */
 function bounce_code_features_revert($module) {
@@ -111,9 +112,11 @@ function bounce_code_features_revert($module) {
  *
  * Used to add dependencies in this case, though other forms of features
  * export do more complex things.
- * 
- * @param array $data an array of variable names in this case
- * @param array $export the export definition
+ *
+ * @param array $data
+ *   An array of variable names in this case.
+ * @param array $export
+ *   The export definition.
  */
 function bounce_code_features_export($data, &$export, $module_name = '') {
 

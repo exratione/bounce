@@ -1,57 +1,55 @@
 <?php
 
-
-// TODO rip out the imap function implementations and read from the fake data
-  
-
 /**
  * @file
+ * Definition of BounceTestMailServerConnector.
+ *
  * A test class for faking a connection to a mail server account via the IMAP package. It makes no pretensions to being
- * comprehensive or a good test for general use in connecting to a mailbox: it just fakes the small slice of IMAP package 
+ * comprehensive or a good test for general use in connecting to a mailbox: it just fakes the small slice of IMAP package
  * functionality that is important to this module.
  */
 
 /**
- * A test class that fakes connections to a mail server via the IMAP package, allowing as much module functionality 
+ * A test class that fakes connections to a mail server via the IMAP package, allowing as much module functionality
  * as possible to be exercised without having to set up an actual mail server.
  */
 class BounceTestMailServerConnector extends BounceMailServerConnector {
-  
+
   /**
    * Stores simulated error messages for imap_last_error().
    */
   public $last_error_message = FALSE;
-  
+
   // various boolean switches for simulating failure of IMAP package functions
   public $fail_imap_close = FALSE;
   public $fail_imap_open = FALSE;
   public $fail_imap_timeout = FALSE;
-  
+
   public function __construct($params) {
     parent::__construct($params);
   }
-  
+
   //----------------------------------------------------------------------------
   // Mail templates
-  //---------------------------------------------------------------------------- 
-  
+  //----------------------------------------------------------------------------
+
   /**
    * The upper level overview data for a mail.
    */
   public $mail_overview_generic = array(
-  
+
     // Overview fields
     'subject' => 'the messages subject - irrelevant here since it is not used for analysis',
     'from' => 'mail-daemon@example.com',
     'to' => 'bounce@mydomain.com',
     'date' => NULL,
     'deleted' => FALSE,
-    
+
     // Overview fields that can or will be set later
     /*
     'msgno'       - message sequence number in the mailbox
     */
-  
+
     // Overview fields we don't use but which can exist in a real mailbox
     /*
     'message_id' - Message-ID
@@ -65,18 +63,21 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     'seen' - this message is flagged as already read
     'draft' - this message is flagged as being a draft
     */
-  
+
     // Fields that don't exist in a real mailbox, but are here holding data
     'parts' => NULL
   );
-  
+
   /**
-   * Generate a data structure for a non-delivery report email as these are stored 
+   * Generate a data structure for a non-delivery report email as these are stored
    * locally in this database. The text will be non-real, but sufficient to exercise module code.
-   * 
-   * @param string $smtp_code the code that should be extracted from the mail
-   * @param string $recipient_email_address the email address of the original recipient
-   * @return array a mail data structure for the fake mailbox
+   *
+   * @param string $smtp_code
+   *   The code that should be extracted from the mail.
+   * @param string $recipient_email_address
+   *   The email address of the original recipient.
+   * @return array
+   *   A mail data structure for the fake mailbox.
    */
   public function __generateSMTPNonDeliveryReport($smtp_code, $recipient_email_address) {
     $parts = array();
@@ -102,40 +103,40 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       'data' => 'blah blah ' . $recipient_email_address . ' blah blah',
       'charset' => 'utf-8',
     );
-    
+
     $report = $this->mail_overview_generic;
     $report['parts'] = $parts;
     return $report;
   }
 
-  
+
   //----------------------------------------------------------------------------
   // Methods for managing test mail data.
-  //---------------------------------------------------------------------------- 
-  
+  //----------------------------------------------------------------------------
+
   /**
    * Return the mailbox.
    */
   public function __load_mailbox() {
     return variable_get('bounce_test_connector_mailbox', array());
   }
-  
+
   /**
    * Store the updated mailbox.
-   * 
+   *
    * @param array $mailbox
    */
   public function __store_mailbox($mailbox) {
     variable_set('bounce_test_connector_mailbox', $mailbox);
   }
-  
+
   /**
    * Reset the mailbox for a new test run.
    */
   public function __reset_mailbox() {
     variable_set('bounce_test_connector_mailbox', array());
-  } 
-  
+  }
+
   /**
    * Remove all messages from the fake mailbox.
    */
@@ -146,7 +147,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
         unset($mailbox[$index]);
       }
     }
-    
+
     // and reorder the numbering on the mailbox
     $ordered_mailbox = array();
     foreach($mailbox as $mail) {
@@ -158,10 +159,10 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     }
     $this->__store_mailbox($ordered_mailbox);
   }
-  
+
   /**
    * Add a mail message to the fake mailbox.
-   * 
+   *
    * @param array $mail
    */
   public function __deliverMail($mail) {
@@ -177,7 +178,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     $mailbox[$index] = $mail;
     $this->__store_mailbox($mailbox);
   }
-  
+
   //----------------------------------------------------------------------------
   // Redeclarations to make properties public and thus accessible for testing.
   //----------------------------------------------------------------------------
@@ -189,28 +190,28 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   public $login = NULL;
   public $password = NULL;
   public $folder = NULL;       // should usually be 'INBOX'
-  
-  public function parse_mail_headers_into_array($headers) { 
+
+  public function parse_mail_headers_into_array($headers) {
     return parent::parse_mail_headers_into_array($headers);
   }
-  
+
   public function mail_get_parts($message_number, $part, $prefix) {
     return parent::mail_get_parts($message_number, $part, $prefix);
   }
-  
-  public function mail_decode_part($message_number, $part, $prefix) { 
+
+  public function mail_decode_part($message_number, $part, $prefix) {
     return parent::mail_decode_part($message_number, $part, $prefix);
   }
-  
+
   //----------------------------------------------------------------------------
   // Wrapper methods to generate responses as though from IMAP package functions
   //----------------------------------------------------------------------------
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_body()
-   */   
+   */
   public function imap_body($message_number, $options = NULL) {
     // munge the message sections together; not terribly realistic, but fine for testing here.
     //
@@ -229,12 +230,12 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     }
     return NULL;
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_check()
-   */ 
+   */
   public function imap_check() {
     $mailbox = $this->__load_mailbox();
     return (object)array(
@@ -245,12 +246,12 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       'Recent' => count($mailbox),
     );
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_close()
-   */   
+   */
   public function imap_close($flag) {
     if ($this->fail_imap_close) {
       $this->last_error_message = 'imap_close() set to fail';
@@ -262,10 +263,10 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       return TRUE;
     }
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_delete()
    */
   public function imap_delete($message_number) {
@@ -275,12 +276,12 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     }
     $this->__store_mailbox($mailbox);
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_fetch_overview()
-   */ 
+   */
   public function imap_fetch_overview($range) {
     $mailbox = $this->__load_mailbox();
     if (preg_match('/:/', $range)) {
@@ -296,46 +297,46 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       $message_numbers = array_flip($message_numbers);
       $mails = array_intersect_key($mailbox, $message_numbers);
     }
-    
+
     foreach ($mails as &$mail) {
       unset($mail['parts']);
       $mail = (object)$mail;
     }
     return array_values($mails);
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_fetchbody()
-   */ 
+   */
   public function imap_fetchbody($message_number, $prefix) {
     $mailbox = $this->__load_mailbox();
     if (isset($mailbox[$message_number])) {
       $parts = $mailbox[$message_number]['parts'];
       $headers = array_shift($parts);
-      
+
       if ($prefix === '0') {
         return $headers['data'];
       } else {
-        // assuming only one level in the prefix (e.g. it might be 0, 1, 2, etc and not 1.1, 2.3, etc) - which 
+        // assuming only one level in the prefix (e.g. it might be 0, 1, 2, etc and not 1.1, 2.3, etc) - which
         // is not the case in reality, but is fine for these fake mails.
-        if (isset($parts[(int)$prefix - 1])) {
-          return $parts[(int)$prefix - 1]['data'];
+        if (isset($parts[((int) $prefix) - 1])) {
+          return $parts[((int) $prefix) - 1]['data'];
         } else {
           return NULL;
         }
       }
     } else {
       return NULL;
-    } 
+    }
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_fetchheader()
-   */ 
+   */
   public function imap_fetchheader($message_number, $options = 0) {
     $mailbox = $this->__load_mailbox();
     if (isset($mailbox[$message_number]['parts'][0]['data'])) {
@@ -344,15 +345,15 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       return NULL;
     }
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * Of all these wrapper functions, this is probably the one that most butchers and oversimplifies
-   * what a real response can look like. 
-   * 
+   * what a real response can look like.
+   *
    * @see imap_fetchstructure()
-   */ 
+   */
   public function imap_fetchstructure($message_number, $options = NULL) {
     $mailbox = $this->__load_mailbox();
     if (isset($mailbox[$message_number])) {
@@ -373,29 +374,29 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
           $structure->parts[] = (object)array(
             'type' => 0, // text
             'bytes' => strlen($part['data']),
-          ); 
+          );
         }
       }
       return $structure;
     } else {
       return NULL;
-    } 
+    }
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_last_error()
    */
   public function imap_last_error() {
     return $this->last_error_message;
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_mailboxmsginfo()
-   */ 
+   */
   public function imap_mailboxmsginfo() {
     $mailbox = $this->__load_mailbox();
     $deleted = 0;
@@ -415,10 +416,10 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       'Recent' => count($mailbox),
     );
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_open()
    */
   public function imap_open($mailbox, $username, $password, $options = NULL, $n_retries = NULL) {
@@ -429,10 +430,10 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
       return TRUE;
     }
   }
-  
+
   /**
    * Wrapper method that (incompletely, probably badly) simulates the response of a real server.
-   * 
+   *
    * @see imap_timeout()
    */
   public function imap_timeout($timeout_type, $timeout) {
@@ -442,6 +443,6 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
     } else {
       return TRUE;
     }
-  } 
-  
+  }
+
 }

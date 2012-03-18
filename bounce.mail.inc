@@ -7,15 +7,15 @@
 
 /**
  * Implements hook_mail_alter().
- * 
- * Here we do the following: 
- * 
+ *
+ * Here we do the following:
+ *
  * 1) Set the return path header to the address specified in the admin settings form.
- * 
- * 2) Add an identifier to the headers that should help match up non-delivery reports with 
+ *
+ * 2) Add an identifier to the headers that should help match up non-delivery reports with
  * the email address that the originating mail was sent to.
- * 
- * 3) Block outgoing mail to by removing addresses from $message['to'] or setting 
+ *
+ * 3) Block outgoing mail to by removing addresses from $message['to'] or setting
  * $message['send'] = FALSE.
  */
 function bounce_mail_alter(&$message) {
@@ -23,8 +23,8 @@ function bounce_mail_alter(&$message) {
   if ($return_path) {
     $message['headers']['Return-Path'] = $return_path;
   }
-  
-  // Alter the "to" string to remove mails that are blocked. Remember that this 
+
+  // Alter the "to" string to remove mails that are blocked. Remember that this
   // is RFC 2822, so could be a comma-delimited string of multiple addresses.
   $to = bounce_mail_remove_blocked_addresses($message['to']);
   if (empty($to)) {
@@ -35,10 +35,10 @@ function bounce_mail_alter(&$message) {
     // update and carry on.
     $message['to'] = $to;
   }
-  
-  // extract emails from the "to" string 
+
+  // extract emails from the "to" string
   $emails = _bounce_unique_mails_from_text($message['to']);
-      
+
   // If there is more than one email then they all get the same header.
   // That makes it more of a pain to figure out which one generated a
   // non-delivery report later on, but oh well.
@@ -56,9 +56,11 @@ function bounce_mail_alter(&$message) {
 
 /**
  * Given an RFC 2822 set of addresses, remove those that are blocked.
- * 
- * @param string $to emails
- * @return string the amended RFC 2822 addresses string
+ *
+ * @param string $to
+ *   The RFC 2822 set of emails to send to.
+ * @return string
+ *   The amended RFC 2822 addresses string.
  */
 function bounce_mail_remove_blocked_addresses($to) {
   $addresses = explode(',', $to);

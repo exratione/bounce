@@ -7,7 +7,7 @@
 
 /**
  * Implements hook_cron_queue_info().
- * 
+ *
  * Specify queues for connecting to a mail server and for processing of
  * non-delivery report emails.
  */
@@ -38,32 +38,32 @@ function bounce_cron() {
   // ---------------------------------------------
   // 1) Clear out old data.
   // ---------------------------------------------
-  
+
   bounce_delete_old_data();
-  
+
   // ---------------------------------------------
   // 2) Block email addresses where necessary
   // ---------------------------------------------
-  
+
   // Start by obtaining the blocker
   $blocker = variable_get('bounce_blocker', BOUNCE_DEFAULT_BLOCKER);
   $blockers = bounce_component_definitions('blocker');
   bounce_component_include($blockers[$blocker]);
-  
+
   // check to see that the blocker is configured
   if ($configured = call_user_func($blockers[$blocker]['configured_check_callback'])) {
-    
+
     // obtain the list of newly blocked mails
     $mails = call_user_func($blockers[$blocker]['blocked_callback']);
-    
+
     // drop the offending mails into the blocked table if they aren't there already.
     foreach($mails as $mail) {
       $count = db_select('bounce_blocked')
         ->condition('mail', $mail, '=')
         ->countQuery()
         ->execute()
-        ->fetchField();  
-      if (!$count) {  
+        ->fetchField();
+      if (!$count) {
         // write the record
         $record = array(
           'mail' => $mail,
@@ -84,13 +84,13 @@ function bounce_cron() {
     // Call the hook if there were any mails to block.
     if ($mails) {
       module_invoke_all('bounce_mails_blocked', $mails);
-    }  
+    }
   }
-  
+
   // ----------------------------------------------
   // 3) Add a queue item to connect to the mail server
   // ----------------------------------------------
-  
+
   $queue = DrupalQueue::get('bounce_connection');
   $queue->createItem(array());
 }
@@ -105,7 +105,7 @@ function bounce_delete_old_data() {
   db_delete('bounce_sent')
     ->condition('created', $time, '<')
     ->execute();
-    
+
   // Delete old non-delivery reports. This is a little more complex. We want to keep non-delivery reports that were
   // used to block an email address, but only if the email address is still blocked.
   $age_in_seconds = variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS) * 86400;

@@ -1,20 +1,25 @@
 <?php
 
 /**
+ * @file
+ * Install, update, and uninstall functions for the Bounce module.
+ */
+
+/**
  * Implements hook_schema().
  */
 function bounce_schema() {
   $schema = array();
-  
+
   $schema['bounce_blocked'] = array(
     'description' => 'Stores email addresses that should no longer receive further emails due to past non-delivery reports.',
-    'fields' => array( 
+    'fields' => array(
       'blocked_id' => array(
         'description' => 'Primary key for blocked mail records.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-      ),  
+      ),
       'mail' => array(
         'description' => 'Email addresses that should no longer receive further emails due to past non-delivery reports.',
         'type' => 'varchar',
@@ -44,7 +49,7 @@ function bounce_schema() {
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-      ),  
+      ),
       'header_id' => array(
         'description' => 'Identifier added to the mail headers.',
         'type' => 'varchar',
@@ -74,7 +79,7 @@ function bounce_schema() {
     ),
     'primary key' => array('sent_id'),
   );
-  
+
   $schema['bounce_non_delivery_report'] = array(
     'description' => 'Record of non-delivery reports - not all of them, just the ones that could be deciphered.',
     'fields' => array(
@@ -83,7 +88,7 @@ function bounce_schema() {
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-      ),  
+      ),
       'mail' => array(
         'description' => 'Email address the mail was sent to.',
         'type' => 'varchar',
@@ -116,7 +121,7 @@ function bounce_schema() {
         'description' => 'Used to record whether or not this non-delivery report has been used to block a mail, and therefore should be treated differently.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0,      
+        'default' => 0,
       ),
       'created' => array(
         'description' => 'The time this record was created.',
@@ -132,8 +137,8 @@ function bounce_schema() {
       'created' => array('created'),
     ),
     'primary key' => array('report_id'),
-  );  
-  
+  );
+
   $schema['bounce_code_score'] = array(
     'description' => 'Assigning scores to SMTP codes to enable actions based on score thresholds.',
     'fields' => array(
@@ -167,7 +172,7 @@ function bounce_schema() {
       ),
     ),
     'primary key' => array('code'),
-  );    
+  );
   return $schema;
 }
 
@@ -199,174 +204,174 @@ function bounce_install() {
   $count = db_select('bounce_code_score')
     ->countQuery()
     ->execute()
-    ->fetchField();  
+    ->fetchField();
   if ($count) {
     return;
   }
-  
+
   // Set some initial variables here rather than using the long defaults everywhere.
   variable_set('bounce_notify_user_message', 'Please update your email address: it has been blocked from receiving further mails due to failed delivery of past mail.');
   variable_set('bounce_error_on_registration_message', 'You cannot register with the provided email address: it has been blocked from receiving further mails due to failed delivery of past mail.');
   variable_set('bounce_error_on_password_reset_message', 'You cannot reset your password. The email address associated with your account been blocked from receiving further mails due to failed delivery of past mail.');
-  
+
   // Add an initial set of SMTP codes and scores. These are opinionated and by no means rigorous or comprehensive.
   // The only goal here is to prioritize avoidance of actions that will make you look like a spam source - i.e.
   // stop sending mail to addresses where you look like a spammer if you keep sending despite the non-delivery reports.
   $values = array(
     array(
-      'code' => '421', 
+      'code' => '421',
       'type' => 'rfc821',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Probably a greylist response'),
     ),
     array(
-      'code' => '422', 
+      'code' => '422',
       'type' => 'rfc821',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Server out of space error'),
     ),
     array(
-      'code' => '450', 
+      'code' => '450',
       'type' => 'rfc821',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Varying soft bounces'),
     ),
     array(
-      'code' => '451', 
+      'code' => '451',
       'type' => 'rfc821',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Greylist response'),
     ),
     array(
-      'code' => '452', 
+      'code' => '452',
       'type' => 'rfc821',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Account temporarily out of space notice'),
     ),
     array(
-      'code' => '454', 
+      'code' => '454',
       'type' => 'rfc821',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Temporary server error'),
     ),
     array(
-      'code' => '500', 
+      'code' => '500',
       'type' => 'rfc821',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Server error'),
     ),
     array(
-      'code' => '501', 
+      'code' => '501',
       'type' => 'rfc821',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Server error'),
     ),
     array(
-      'code' => '502', 
+      'code' => '502',
       'type' => 'rfc821',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Server error'),
     ),
     array(
-      'code' => '503', 
+      'code' => '503',
       'type' => 'rfc821',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Server error'),
     ),
     array(
-      'code' => '504', 
+      'code' => '504',
       'type' => 'rfc821',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Server error'),
     ),
     array(
-      'code' => '550', 
+      'code' => '550',
       'type' => 'rfc821',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Definitive hard bounce'),
     ),
     array(
-      'code' => '551', 
+      'code' => '551',
       'type' => 'rfc821',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Definitive hard bounce'),
     ),
     array(
-      'code' => '552', 
+      'code' => '552',
       'type' => 'rfc821',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Account permanently out of space notice'),
     ),
     array(
-      'code' => '553', 
+      'code' => '553',
       'type' => 'rfc821',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Definitive hard bounce'),
     ),
     array(
-      'code' => '554', 
+      'code' => '554',
       'type' => 'rfc821',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Definitive hard bounce'),
     ),
     array(
-      'code' => '4.1.1', 
+      'code' => '4.1.1',
       'type' => 'rfc1893',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Temporarily no such mailbox'),
     ),
     array(
-      'code' => '4.2.1', 
+      'code' => '4.2.1',
       'type' => 'rfc1893',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Mailbox temporarily disabled'),
     ),
     array(
-      'code' => '4.2.2', 
+      'code' => '4.2.2',
       'type' => 'rfc1893',
-      'score' => 25, 
+      'score' => 25,
       'description' => t('Mailbox temporarily full'),
     ),
     array(
-      'code' => '4.7.1', 
+      'code' => '4.7.1',
       'type' => 'rfc1893',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Greylist response'),
     ),
     array(
-      'code' => '5.1.1', 
+      'code' => '5.1.1',
       'type' => 'rfc1893',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Permanently no such mailbox'),
     ),
     array(
-      'code' => '5.2.1', 
+      'code' => '5.2.1',
       'type' => 'rfc1893',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Mailbox permanently disabled'),
     ),
     array(
-      'code' => '5.2.2', 
+      'code' => '5.2.2',
       'type' => 'rfc1893',
-      'score' => 50, 
+      'score' => 50,
       'description' => t('Mailbox permanently full'),
     ),
     array(
-      'code' => 'autoreply', 
+      'code' => 'autoreply',
       'type' => 'system',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Out of office, on vacation, and other forms of auto-reply mail.'),
     ),
     array(
-      'code' => 'greylist', 
+      'code' => 'greylist',
       'type' => 'system',
-      'score' => 0, 
+      'score' => 0,
       'description' => t('Greylist non-delivery report with no SMTP response code.'),
     ),
     array(
-      'code' => 'spamfilter', 
+      'code' => 'spamfilter',
       'type' => 'system',
-      'score' => 10, 
+      'score' => 10,
       'description' => t('Notification of message blocked by spam filter.'),
     ),
   );

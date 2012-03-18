@@ -2,9 +2,11 @@
 
 /**
  * Return a connector object for use in establising a POP3, POP3S, IMAP, or IMAPS connection to a mailserver.
- * 
- * @param array $params parameters for the connection
- * @return object an initialized connector object.
+ *
+ * @param array $params
+ *   Parameters for the connection.
+ * @return object
+ *   An initialized connector object.
  */
 function bounce_get_mailserver_connector($params = array()) {
   $params += array(
@@ -17,20 +19,20 @@ function bounce_get_mailserver_connector($params = array()) {
     'mail_part_size_limit' => variable_get('bounce_mail_part_size_limit_bytes', BOUNCE_DEFAULT_MAIL_PART_SIZE_LIMIT_BYTES),
     // values below are not expected to be passed in
     'folder' => 'INBOX',
-  );  
-  
+  );
+
   // Placing the connector class into a variable allows the test cases to use a different class.
-  // Overriding this is not recommended for other modules - you should instead implement 
+  // Overriding this is not recommended for other modules - you should instead implement
   // hook_bounce_connector() or hook_bounce_connect_types_alter()
   // to define a different type or different callback for the POP3, POP3S, IMAP, and IMAPS types.
   $class = variable_get('bounce_connector_class', 'BounceMailServerConnector');
   bounce_include('connector.class');
-  return new $class($params);  
+  return new $class($params);
 }
 
 /**
  * Callback function to check on connector configuration.
- * 
+ *
  * @return boolean TRUE if configured.
  */
 function bounce_connector_is_configured() {
@@ -44,10 +46,13 @@ function bounce_connector_is_configured() {
 /**
  * Callback function for connecting to a mailserver via the default connector
  * and retrieving non-delivery report email data from an account on that server.
- * 
- * @param array $account login information for the email account
- * @param array $params parameters for the connection
- * @return array an indexed array of email contents for processing - hopefully non-delivery reports
+ *
+ * @param array $account
+ *   Login information for the email account.
+ * @param array $params
+ *   Parameters for the connection.
+ * @return array
+ *   An indexed array of email contents for processing - hopefully non-delivery reports.
  */
 function bounce_connect() {
   $reports = array();
@@ -62,11 +67,11 @@ function bounce_connect() {
   );
   // check to see that configuration exists - if not, do nothing.
   foreach ($params as $value) {
-    if (!$value) { 
+    if (!$value) {
       return $reports;
     }
   }
-  
+
   $connector = bounce_get_mailserver_connector($params);
   $limit = variable_get('bounce_connector_max_reports_per_session', BOUNCE_DEFAULT_MAX_REPORTS_PER_SESSION);
   if ($connector->login()) {
@@ -101,11 +106,13 @@ function bounce_connect() {
 /**
  * Callback function to validate the account details, and see whether or not a connection can be established.
  *
- * @param array $params parameters for the connection
- * @return array an indexed array of email contents for processing - hopefully non-delivery reports
+ * @param array $params
+ *   Parameters for the connection.
+ * @return array
+ *   An indexed array of email contents for processing - hopefully non-delivery reports.
  */
 function bounce_connect_validate($params) {
-  $connector = bounce_get_mailserver_connector($params); 
+  $connector = bounce_get_mailserver_connector($params);
   $validated = FALSE;
   if ($connector->login()) {
     $validated = TRUE;
@@ -119,9 +126,9 @@ function bounce_connect_validate($params) {
  * Callback for the settings form associated with the default connector.
  */
 function bounce_connect_settings($form, &$form_state) {
-  
+
   drupal_add_js(drupal_get_path('module', 'bounce') . '/js/bounce.connector.js');
-  
+
   $form['connector'] = array(
     '#type' => 'fieldset',
     '#title' => t('Mail server and account'),
@@ -135,7 +142,7 @@ function bounce_connect_settings($form, &$form_state) {
     '#description' => t('The domain name of your mail server, e.g. mail.mydomain.com'),
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_connector_server', ''),
-  ); 
+  );
   $form['connector']['bounce_connector_login'] = array(
     '#type' => 'textfield',
     '#title' => t('Login'),
@@ -164,40 +171,40 @@ function bounce_connect_settings($form, &$form_state) {
     '#options' => array(
       'pop3' => t('POP3 (Plain text, unsecure)'),
       'pop3s' => t('POP3S (SSL, secure)'),
-      'imap' => t('IMAP (Plain text, unsecure)'), 
-      'imaps' => t('IMAPS (SSL, secure)'), 
+      'imap' => t('IMAP (Plain text, unsecure)'),
+      'imaps' => t('IMAPS (SSL, secure)'),
     ),
     '#default_value' => 'pop3s',
   );
   $form['connection']['bounce_connector_port'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'textfield',
     '#title' => t('Port'),
     '#description' => t('Attempt to connect to this port number. Most servers use the standard port that is set on selecting the protocol.'),
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_connector_port', 995),
   );
   $form['connection']['bounce_connector_max_reports_per_session'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'textfield',
     '#title' => t('Maximum non-delivery reports per session'),
     '#description' => t('The maximum number of non-delivery reports to pull from a mailserver in a single session.'),
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_connector_max_reports_per_session', BOUNCE_DEFAULT_MAX_REPORTS_PER_SESSION),
   );
   $form['connection']['bounce_connector_timeout'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'textfield',
     '#title' => t('Connection timeout'),
     '#description' => t('Timeout in seconds for the connection.'),
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_connector_timeout', BOUNCE_DEFAULT_CONNECTION_TIMEOUT),
   );
   $form['connection']['bounce_mail_part_size_limit_bytes'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'textfield',
     '#title' => t('Maximum mail part size to download, in bytes'),
     '#description' => t('Enter a number of bytes. Mail parts can include encoded text, attachments, or other items. The information needed to determine non-delivery report code and email address of the recipient is usually contained in smaller text-only parts. Any part larger than this limit will be ignored.'),
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_mail_part_size_limit_bytes', BOUNCE_DEFAULT_MAIL_PART_SIZE_LIMIT_BYTES),
   );
-  
+
   $form = system_settings_form($form);
   $form['#validate'][] = 'bounce_connect_settings_validate';
   return $form;
@@ -217,17 +224,17 @@ function bounce_connect_settings_validate($form, &$form_state) {
   if (!preg_match('/^\d+$/', $values['bounce_mail_part_size_limit_bytes']) || !$values['bounce_mail_part_size_limit_bytes']) {
     form_set_error('bounce_mail_part_size_limit_bytes', t('Maximum mail part size must be a whole number of bytes greater than zero.'));
   }
-  
+
   // a blank password means keep the password we have; the password field type doesn't display its value
   // so if the user doesn't change it, we'll see an empty string rather than the existing value
   if (empty($form_state['values']['bounce_connector_password'])) {
     $form_state['values']['bounce_connector_password'] = variable_get('bounce_connector_password', '');
   }
-  
+
   if($errors = form_get_errors()) {
     return;
   }
-  
+
   $params = array(
     'server' => $values['bounce_connector_server'],
     'protocol' => $values['bounce_connector_protocol'],
