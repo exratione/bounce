@@ -452,13 +452,13 @@ class BounceMailServerConnector {
    *   An associated array of name-value pairs.
    */
   protected function parseMailHeadersIntoArray($headers) {
-     $headers = preg_replace('/\r\n\s+/m', '', $headers);
-     preg_match_all('/([^: ]+): (.+?(?:\r\n\s(?:.+?))*)?\r\n/m', $headers, $matches);
-     $result = array();
-     foreach ($matches[1] as $key => $value) {
-        $result[$value] = $matches[2][$key];
-     }
-     return $result;
+    $headers = preg_replace('/\r\n\s+/m', '', $headers);
+    preg_match_all('/([^: ]+): (.+?(?:\r\n\s(?:.+?))*)?\r\n/m', $headers, $matches);
+    $result = array();
+    foreach ($matches[1] as $key => $value) {
+      $result[$value] = $matches[2][$key];
+    }
+    return $result;
   }
 
   /**

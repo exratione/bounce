@@ -140,12 +140,12 @@ function bounce_analyze_non_delivery_report($report) {
   /*
    ---------------------------------------------------------------
    Now start in on the rest of it, and try to establish a code.
+
+   We're looking for the identifying header from the original email that
+   generated this non-delivery report, and also any SMTP codes or other
+   information we can use to categorize the report.
    ---------------------------------------------------------------
   */
-
-  // We're looking for the identifying header from the original email that
-  // generated this non-delivery report, and also any SMTP codes or other
-  // information we can use to categorize the report.
 
   // Determine a response code.
   if (!$analysis['code']) {
@@ -190,7 +190,7 @@ function bounce_analyze_non_delivery_report($report) {
         ->fetchCol();
       $count = count($mails);
       if ($count == 1) {
-        // this matches one address, so we are done here.
+        // This matches one address, so we are done here.
         $analysis['mail'] = array_shift($mails);
         return $analysis;
       }
@@ -231,7 +231,7 @@ function bounce_analyze_non_delivery_report($report) {
     //
     $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_mails);
     if ($mail) {
-      // did we sent out an email within the last hour to this address? For the
+      // Did we sent out an email within the last hour to this address? For the
       // reasons noted above, we want to ensure that this check is a short
       // timeline, to limit the opportunity for attacks using crafted emails
       // sent to the Return-Path address.

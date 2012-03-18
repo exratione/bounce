@@ -233,7 +233,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $report = array(
       array(
         'data' => array(
-          'header1' => 'value1'
+          'header1' => 'value1',
         ),
         'charset' => 'utf-8',
       ),

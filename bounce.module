@@ -408,7 +408,7 @@ function bounce_process_connection_queue_item($item) {
       'bounce',
       'Retrieved @reports from the Return-Path account.',
       array(
-        '@reports' => format_plural(count($reports), '1 potential non-delivery report', '@count potential non-delivery reports')
+        '@reports' => format_plural(count($reports), '1 potential non-delivery report', '@count potential non-delivery reports'),
       ),
       WATCHDOG_INFO
     );

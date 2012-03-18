@@ -3,7 +3,7 @@ jQuery(document).ready(function() {
     var port = "";
     switch(jQuery(this).val()) {
       case "pop3":
-        port = 110; 
+        port = 110;
         break;
 
       case "pop3s":
