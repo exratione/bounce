@@ -5,7 +5,7 @@
  * Enable the default blocker component's codes and scoring to be exported via
  * the Features module.
  *
- * Note that all of the hook functions here begin "bounce_code_" rather
+ * Note that most of the hook functions here begin "bounce_code_" rather
  * than "bounce_". This is necessary.
  */
 
@@ -13,8 +13,7 @@
  * Implements hook_features_api().
  *
  * We have to tell features that we are defining a new entity for export: rows
- * from the bounce_code_score table. The rest of the required definitions and
- * hook implementations are in /include/bounce.features.inc.
+ * from the bounce_code_score table.
  */
 function bounce_features_api() {
   return array(

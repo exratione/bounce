@@ -164,7 +164,7 @@ function bounce_menu() {
     'weight' => 1,
   );
 
-  // View non-delivery reports for a particular blocked email address/
+  // View non-delivery reports for a particular blocked email address.
   $items['admin/config/people/bounce/blocked/%bounce_blocked_mail'] = array(
     'title' => 'View non-delivery reports',
     'description' => 'View a list of non-delivery reports for a blocked mail.',
@@ -450,7 +450,7 @@ function bounce_process_non_delivery_report_queue_item($report) {
   $analysts = bounce_component_definitions('analyst');
   bounce_component_include($analysts[$analyst]);
 
-  // Check to see that the connector is configured.
+  // Check to see that the analyst is configured.
   if (call_user_func($analysts[$analyst]['configured_check_callback']) != TRUE) {
     return;
   }
