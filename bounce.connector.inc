@@ -228,16 +228,16 @@ function bounce_connect_settings($form, &$form_state) {
  */
 function bounce_connect_settings_validate($form, &$form_state) {
   $values = $form_state['values'];
-  if (!preg_match('/^\d+$/', $values['bounce_connector_port'])) {
+  if (!preg_match('/^\d+$/', $form_state['values']['bounce_connector_port'])) {
     form_set_error('bounce_connector_port', t('Connection port must be an integer number.'));
   }
-  if (!preg_match('/^\d+$/', $values['bounce_connector_max_reports_per_session']) || !$values['bounce_connector_max_reports_per_session']) {
+  if (!preg_match('/^\d+$/', $form_state['values']['bounce_connector_max_reports_per_session']) || !$form_state['values']['bounce_connector_max_reports_per_session']) {
     form_set_error('bounce_connector_max_reports_per_session', t('Maximum non-delivery reports per session must be a whole number greater than zero.'));
   }
-  if (!preg_match('/^\d+$/', $values['bounce_connector_timeout']) || !$values['bounce_connector_timeout']) {
+  if (!preg_match('/^\d+$/', $form_state['values']['bounce_connector_timeout']) || !$form_state['values']['bounce_connector_timeout']) {
     form_set_error('bounce_connector_timeout', t('Connection timeout must be a whole number of seconds greater than zero.'));
   }
-  if (!preg_match('/^\d+$/', $values['bounce_mail_part_size_limit_bytes']) || !$values['bounce_mail_part_size_limit_bytes']) {
+  if (!preg_match('/^\d+$/', $form_state['values']['bounce_mail_part_size_limit_bytes']) || !$form_state['values']['bounce_mail_part_size_limit_bytes']) {
     form_set_error('bounce_mail_part_size_limit_bytes', t('Maximum mail part size must be a whole number of bytes greater than zero.'));
   }
 
@@ -253,13 +253,13 @@ function bounce_connect_settings_validate($form, &$form_state) {
   }
 
   $params = array(
-    'server' => $values['bounce_connector_server'],
-    'protocol' => $values['bounce_connector_protocol'],
-    'port' => $values['bounce_connector_port'],
-    'login' => $values['bounce_connector_login'],
-    'password' => $values['bounce_connector_password'],
-    'timeout' => $values['bounce_connector_timeout'],
-    'mail_part_size_limit' => $values['bounce_mail_part_size_limit_bytes'],
+    'server' => $form_state['values']['bounce_connector_server'],
+    'protocol' => $form_state['values']['bounce_connector_protocol'],
+    'port' => $form_state['values']['bounce_connector_port'],
+    'login' => $form_state['values']['bounce_connector_login'],
+    'password' => $form_state['values']['bounce_connector_password'],
+    'timeout' => $form_state['values']['bounce_connector_timeout'],
+    'mail_part_size_limit' => $form_state['values']['bounce_mail_part_size_limit_bytes'],
   );
   foreach ($params as $value) {
     if (empty($value)) {
