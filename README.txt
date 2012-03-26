@@ -46,6 +46,7 @@ Return-Path setting entirely. Some of the known modules are listed below:
 
 Works:
   Drupal core DefaultMailSystem (via sendmail, so not ideal)
+  Swift Mailer
 
 Does not work:
   SMTP Authentication Support
