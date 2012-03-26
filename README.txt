@@ -24,16 +24,41 @@ implementations through hooks defined in this module.
 
 -- Requirements --
 
+1) Drupal Core Version
+
+Bounce requires Drupal 7.12 or later, as that is the earliest version to
+support cancellation of mail sending via setting $message['send'] = FALSE
+in an implementation of hook_mail_alter().
+
+2) A Mail Account for Non-Delivery Reports
+
 You must have a mail account set up to receive non-delivery report emails.
 e.g. automatic responses sent to the account bounces@example.com. That
 account must be accessible via POP or IMAP protocols from the server
 hosting your Drupal site.
 
+3) Mail Delivery Mechanism Allows Return-Path to be Set
+
+Bounce sets the Return-Path mail header to a different value than the From
+header. Not all modules that provide new options for sending mail (i.e. 
+implement a MailSystemInterface class) permit this, and some will ignore the
+Return-Path setting entirely. Some of the known modules are listed below:
+
+Works:
+  Drupal core DefaultMailSystem (via sendmail, so not ideal)
+
+Does not work:
+  SMTP Authentication Support
+
+4) (Optional, but Very Much Recommended) Send Mail Using SMTP
+
 Ideally you should have your own mail server set up for your domain, and
 be sending all outgoing mail from your Drupal site through that server via
-a module such as SMTP Authentication Support. If you are not doing this,
+a module that permits sending mail via SMTP. If you are not doing this,
 then you have far more serious issues with mail deliverability than Bounce
-can help you with.
+can help you with - for example, sending from the Drupal server using sendmail
+on a Linux system cannot respond correctly to greylisting, which looks very
+much like a spam sending robot's behavior.
 
 -- Installation and Configuration --
 
@@ -108,32 +133,27 @@ in most circumstances is the site email address set in the administrative
 interface. Bounce empties out the email account it is configured to
 access, so you want it to have its own account for non-delivery reports.
 
-Depending on how your Drupal instance is set up to send mail, the
-Return-Path header set via Bounce may be overwritten or stripped by the
-mail software on the server (e.g. sendmail) or by a mail server en route
-to the final destination. Out of the box, a standard Drupal installation
-sends mail from the local server using the PHP mail() function, which is
-almost certainly going to see you losing the Return-Path. But then sending
-from the local server rather than through a dedicated mail server will
-cause you all sorts of other issues as well - such as being unable to
-respond properly to greylisting, which is definitely going to make you
-look like a spam source or mailbot. If you are serious about being a good
-internet citizen when it comes to sending mail to your users, then you
-really should set up a mail server and send your outgoing mail through
-that server.
+As noted in the Requirements section above, not all of the options for
+sending mail from Drupal respect the Return-Path set in a mail message.
 
-If you have a mail server set up, then install and configure the SMTP
-Authentication Support module. This allows Drupal to send mail via your
-mail server, and should preserve the Return-Path header set by Bounce. If
-you're still losing the Return-Path header then the problem is a mail
-server configuration issue, not a Drupal issue.
+Out of the box, Drupal 7 will correctly set the Return-Path header if 
+sending using the DefaultMailSystem mail system. This uses sendmail,
+however, to send mail from the local server directly. This will
+cause you all sorts of other issues - such as being unable to respond
+properly to greylisting, which is definitely going to make you look like a
+spam source or mailbot. If you are serious about being a good internet citizen
+when it comes to sending mail to your users, then you really should set up a
+mail server and send your outgoing mail through that server.
 
--- Use SMTP Authentication Support! Use a Mail Server! --
+If you are using a mail module that correctly preserves the Return-Path
+but you are still losing the Return-Path header between sending and receiving
+then the problem is a mail server configuration issue, not a Drupal issue.
+It is quite possible, though not commonplace, for a mail server to be
+configured to override the Return-Path passed to it in an SMTP session.
 
-You should use the SMTP Authentication support module. You can use Bounce
-without the SMTP Authentication Support module, but it's not a good idea
-to do so unless you are using some other, equivelant module. You should
-absolute, definitely, always be sending outgoing mail through a
+-- Use a Mail Server! --
+
+You should absolute, definitely, always be sending outgoing mail through a
 full-featured mail server, and not via sendmail on the local web server.
 In terms of looking like a spammer, the harm you do yourself by sending
 from the local web server will likely outweigh most of what Bounce can do
