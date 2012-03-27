@@ -550,11 +550,11 @@ class BounceMailServerConnector {
       if (isset($part->encoding)) {
         // 3 = BASE64.
         if ($part->encoding == 3) {
-          $attachment['data'] = base64_decode($attachment['data']);
+          $data = base64_decode($data);
         }
         // 4 = QUOTED-PRINTABLE.
         elseif ($part->encoding == 4) {
-          $attachment['data'] = quoted_printable_decode($attachment['data']);
+          $data = quoted_printable_decode($data);
         }
       }
       $attachment['data'] = $data;
