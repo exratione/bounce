@@ -187,7 +187,7 @@ function bounce_connect_settings($form, &$form_state) {
       'imap' => t('IMAP (Plain text, unsecure)'),
       'imaps' => t('IMAPS (SSL, secure)'),
     ),
-    '#default_value' => 'pop3s',
+    '#default_value' => variable_get('bounce_connector_protocol', 'pop3s'),
   );
   $form['connection']['bounce_connector_port'] = array(
     '#type' => 'textfield',
