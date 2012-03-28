@@ -163,11 +163,20 @@ function bounce_connect_settings($form, &$form_state) {
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_connector_login', ''),
   );
+  // Change the description for the password field depending on whether it has
+  // been set or not. This is hopefully a sufficient cue for the user, given
+  // that the field won't show any sign that it has a value already.
+  if ($password = variable_get('bounce_connector_password', '')) {
+    $description = t('The account password is set. Leave this field blank if you do not wish to change it.');
+  }
+  else {
+    $description = t('Enter the account password.');
+  }
   $form['connector']['bounce_connector_password'] = array(
     '#type' => 'password',
     '#title' => t('Password'),
-    '#description' => t('The account password. Leave blank if you do not wish to change it.'),
-    '#default_value' => variable_get('bounce_connector_password', ''),
+    '#description' => $description,
+    '#default_value' => $password,
   );
 
   $form['connection'] = array(
