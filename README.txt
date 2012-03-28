@@ -46,9 +46,12 @@ Return-Path setting entirely. Some of the known modules are listed below:
 
 Works:
   Drupal core DefaultMailSystem (via sendmail, so not ideal)
+  ManyMail
   Swift Mailer
 
 Does not work:
+  Newsletter (uses SMTP Authentication Support)
+  PHPMailer (the module, not the library)
   SMTP Authentication Support
 
 4) (Optional, but Very Much Recommended) Send Mail Using SMTP
