@@ -88,23 +88,23 @@ function bounce_connect() {
     if (!empty($info['Nmsgs'])) {
       $limit = min($limit, $info['Nmsgs']);
       for ($message_number = 1; $message_number <= $limit; $message_number++) {
-         $message = $connector->getMessage($message_number);
-         /*
-         // has the following format:
-         $message = array(
-           [0] => array(
-             ['data'] => associative array of headers
-             ['charset'] => default encoding of the mail, and thus the headers
-           ),
-           [1] => array(
-             ['data'] => string
-             ['charset'] => the encoding of the string
-           ),
-           [2] => ...
-         )
-         */
-         $reports[] = $message;
-         $connector->markMessageForDeletion($message_number);
+        $message = $connector->getMessage($message_number);
+        /*
+        // has the following format:
+        $message = array(
+          [0] => array(
+            ['data'] => associative array of headers
+            ['charset'] => default encoding of the mail, and thus the headers
+          ),
+          [1] => array(
+            ['data'] => string
+            ['charset'] => the encoding of the string
+          ),
+          [2] => ...
+        )
+        */
+        $reports[] = $message;
+        $connector->markMessageForDeletion($message_number);
       }
     }
     $connector->logout();

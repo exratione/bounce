@@ -13,7 +13,8 @@
 /**
  * Non-delivery report code types are declared.
  *
- * These have no functional meaning beyond helping to categorize non-delivery report codes.
+ * These have no functional meaning beyond helping to categorize
+ * non-delivery report codes.
  *
  * @return array
  *   An associative array of bounce code types.
