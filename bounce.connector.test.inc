@@ -39,9 +39,9 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /*
-   -----------------------------------------------------------------------
-   Mail templates.
-   -----------------------------------------------------------------------
+  -----------------------------------------------------------------------
+  Mail templates.
+  -----------------------------------------------------------------------
   */
 
   /**
@@ -80,9 +80,10 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   );
 
   /**
-   * Generate a data structure for a non-delivery report email as these are
-   * stored locally in this database. The text will be non-real, but sufficient
-   * to exercise module code.
+   * Generate a data structure for a non-delivery report email.
+   *
+   * These are stored locally. The text will be non-real, but sufficient to
+   * exercise module code.
    *
    * @param string $smtp_code
    *   The code that should be extracted from the mail.
@@ -123,9 +124,9 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /*
-   -----------------------------------------------------------------------
-   Methods for managing test mail data.
-   -----------------------------------------------------------------------
+  -----------------------------------------------------------------------
+  Methods for managing test mail data.
+  -----------------------------------------------------------------------
   */
 
   /**
@@ -201,9 +202,9 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /*
-   -----------------------------------------------------------------------
-   Redeclarations to make properties public and thus accessible for testing.
-   -----------------------------------------------------------------------
+  -----------------------------------------------------------------------
+  Redeclarations to make properties public and thus accessible for testing.
+  -----------------------------------------------------------------------
   */
 
   public $server = NULL;
@@ -236,10 +237,10 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   }
 
   /*
-   -----------------------------------------------------------------------
-   Wrapper methods to generate responses as though from IMAP package
-   functions.
-   -----------------------------------------------------------------------
+  -----------------------------------------------------------------------
+  Wrapper methods to generate responses as though from IMAP package
+  functions.
+  -----------------------------------------------------------------------
   */
 
   /**

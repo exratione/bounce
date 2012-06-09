@@ -6,8 +6,9 @@
  */
 
 /**
- * Return a connector object for use in establising a POP3, POP3S, IMAP, or
- * IMAPS connection to a mailserver.
+ * Return a default connector component object.
+ *
+ * Use the connector to establish a POP3 or IMAP connection to a mailserver.
  *
  * @param array $params
  *   (optional) Parameters for the connection.
@@ -53,9 +54,10 @@ function bounce_connector_is_configured() {
 }
 
 /**
- * Callback function for connecting to a mailserver via the default connector
- * and retrieving non-delivery report email data from an account on that
- * server.
+ * Callback function for connecting to a mailserver.
+ *
+ * Connect via the default connector and retrieve non-delivery report email
+ * data from the configured account on that server.
  *
  * @return array
  *   An indexed array of email contents for processing - hopefully non-delivery
@@ -88,19 +90,19 @@ function bounce_connect() {
       for ($message_number = 1; $message_number <= $limit; $message_number++) {
          $message = $connector->getMessage($message_number);
          /*
-          // has the following format:
-          $message = array(
-            [0] => array(
-              ['data'] => associative array of headers
-              ['charset'] => default encoding of the mail, and thus the headers
-            ),
-            [1] => array(
-              ['data'] => string
-              ['charset'] => the encoding of the string
-            ),
-            [2] => ...
-          )
-          */
+         // has the following format:
+         $message = array(
+           [0] => array(
+             ['data'] => associative array of headers
+             ['charset'] => default encoding of the mail, and thus the headers
+           ),
+           [1] => array(
+             ['data'] => string
+             ['charset'] => the encoding of the string
+           ),
+           [2] => ...
+         )
+         */
          $reports[] = $message;
          $connector->markMessageForDeletion($message_number);
       }
@@ -111,8 +113,7 @@ function bounce_connect() {
 }
 
 /**
- * Callback function to validate the account details, and see whether or not a
- * connection can be established.
+ * Callback function to validate the non-delivery report mail account details.
  *
  * @param array $params
  *   Parameters for the connection.

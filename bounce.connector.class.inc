@@ -8,11 +8,9 @@
 /**
  * A class for connecting to a mail server account via POP3 or IMAP protocols.
  *
- * The class needs the php-imap package installed:
+ * The class needs the php-imap package installed. This manages both POP and
+ * IMAP protocols:
  * http://www.php.net/manual/en/book.imap.php
- *
- * On a Fedora OS, "yum install php-imap" will do the trick. Yes, the php-imap
- * package manages POP as well as IMAP.
  *
  * The innards of this class are adapted from code in a comment by Wil Barath:
  * http://www.php.net/manual/en/book.imap.php#96414
@@ -70,7 +68,9 @@ class BounceMailServerConnector {
   protected $maxMailPartSizeBytes = NULL;
 
   /**
-   * The class constructor. The provided parameter array must be of the form:
+   * The class constructor.
+   *
+   * The provided parameter array must be of the following form:
    *
    * array(
    *   'server' => 'mail.mydomain.com',
@@ -193,6 +193,7 @@ class BounceMailServerConnector {
 
   /**
    * Obtain information on the POP3 folder you are presently logged in to.
+   *
    * The function returns a result of this form:
    *
    * Array (
@@ -224,6 +225,7 @@ class BounceMailServerConnector {
 
   /**
    * List messages in the presently active POP3 mail folder.
+   *
    * The function produces results of this form: a list of message information:
    *
    * Array (
@@ -275,8 +277,10 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Return the headers of a message, either as raw text or an array indexed
-   * by header name.
+   * Return the headers of a message.
+   *
+   * Headers are returned either as raw text or an array indexed by header
+   * name.
    *
    * @param integer $message_number
    *   An integer index key from the array returned by listMessages().
@@ -299,8 +303,9 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Mark the the indicated message for deletion. It will be deleted when
-   * logout() is called.
+   * Mark the the indicated message for deletion.
+   *
+   * The message will be deleted when logout() is called.
    *
    * @param integer $message_number
    *   An integer index key from the array returned by listMessages().
@@ -319,6 +324,7 @@ class BounceMailServerConnector {
 
   /**
    * Return an array containing data from the various message parts.
+   *
    * The results look much like this for a single part email, with the
    * message headers in raw and parsed form contained in the first array field.
    *
@@ -400,13 +406,15 @@ class BounceMailServerConnector {
   }
 
   /*
-   -----------------------------------------------------------------------
-   Utility functions from here on down.
-   -----------------------------------------------------------------------
+  -----------------------------------------------------------------------
+  Utility functions from here on down.
+  -----------------------------------------------------------------------
   */
 
   /**
-   * Return the connection string for the mailbox, of the form:
+   * Return the connection string for the mailbox.
+   *
+   * The connection string has this form:
    *
    * {mail.host.com:995/pop3/ssl/novalidate-cert}INBOX
    * {mail.host.com:995/pop3/ssl/novalidate-cert/user="us@host.com"}INBOX
@@ -462,8 +470,10 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Recursively walk through the parts of a multi-part mail, obtaining the
-   * content for each part.
+   * Return the parts of a multi-part mail.
+   *
+   * Recursively walk through the parts, obtaining the content for each part,
+   * and return the whole as nested arrays.
    *
    * @param integer $message_number
    *   The identifier for the message.
@@ -494,8 +504,10 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Retrieve and decode the content for a single part, or return a message
-   * if the part is larger than the limit.
+   * Retrieve and decode the content for a single part.
+   *
+   * Return the content, or a message if the part is larger than the size limit
+   * for mail parts set in the configuration.
    *
    * @param integer $message_number
    *   The identifier for the message.
@@ -563,16 +575,16 @@ class BounceMailServerConnector {
   }
 
   /*
-   -----------------------------------------------------------------------
-   Wrapper methods for IMAP functions.
+  -----------------------------------------------------------------------
+  Wrapper methods for IMAP functions.
 
-   These functions are wrapped to allow overriding in child classes, e.g. for
-   testing without the need for a mailserver.
-   -----------------------------------------------------------------------
+  These functions are wrapped to allow overriding in child classes, e.g. for
+  testing without the need for a mailserver.
+  -----------------------------------------------------------------------
   */
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_body().
    *
    * @see imap_body()
    */
@@ -581,7 +593,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_check().
    *
    * @see imap_check()
    */
@@ -590,7 +602,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_close().
    *
    * @see imap_close()
    */
@@ -599,7 +611,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_delete().
    *
    * @see imap_delete()
    */
@@ -608,7 +620,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_fetch_overview().
    *
    * @see imap_fetch_overview()
    */
@@ -617,7 +629,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_fetchbody().
    *
    * @see imap_fetchbody()
    */
@@ -626,7 +638,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_fetchheader().
    *
    * @see imap_fetchheader()
    */
@@ -635,7 +647,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_fetchstructure().
    *
    * @see imap_fetchstructure()
    */
@@ -644,7 +656,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_last_error().
    *
    * @see imap_last_error()
    */
@@ -653,7 +665,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_mailboxmsginfo().
    *
    * @see imap_mailboxmsginfo()
    */
@@ -662,7 +674,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_open().
    *
    * @see imap_open()
    */
@@ -671,7 +683,7 @@ class BounceMailServerConnector {
   }
 
   /**
-   * Wrapper method.
+   * Wrapper method for imap_timeout().
    *
    * @see imap_timeout()
    */

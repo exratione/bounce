@@ -190,8 +190,9 @@ function bounce_menu() {
 }
 
 /**
- * Autoloader for the %bounce_code wildcard. Returns a row from
- * bounce_code_score.
+ * Autoloader for the %bounce_code wildcard.
+ *
+ * Returns a row from bounce_code_score.
  *
  * @param string $code
  *   A code machine name.
@@ -209,8 +210,9 @@ function bounce_code_load($code) {
 }
 
 /**
- * Autoloader for the %bounce_blocked_mail wildcard. Returns a row
- * from bounce_blocked.
+ * Autoloader for the %bounce_blocked_mail wildcard.
+ *
+ * Returns a row from bounce_blocked.
  *
  * @param string $blocked_id
  *   A primary key for the bounce_blocked table.
@@ -227,8 +229,9 @@ function bounce_blocked_mail_load($blocked_id) {
 }
 
 /**
- * Autoloader for the %bounce_ndr wildcard. Returns a row from
- * bounce_non_delivery_report.
+ * Autoloader for the %bounce_ndr wildcard.
+ *
+ * Returns a row from bounce_non_delivery_report.
  *
  * @param string $report_id
  *   A primary key for the bounce_non_delivery_report table.
@@ -305,17 +308,17 @@ function bounce_cron() {
   }
 
   /*
-   ---------------------------------------------
-   1) Clear out old data.
-   ---------------------------------------------
+  ---------------------------------------------
+  1) Clear out old data.
+  ---------------------------------------------
   */
 
   bounce_delete_old_data();
 
   /*
-   ---------------------------------------------
-   2) Block email addresses where necessary
-   ---------------------------------------------
+  ---------------------------------------------
+  2) Block email addresses where necessary
+  ---------------------------------------------
   */
 
   // Start by obtaining the blocker.
@@ -362,9 +365,9 @@ function bounce_cron() {
   }
 
   /*
-   ----------------------------------------------
-   3) Add a queue item to connect to the mail server
-   ----------------------------------------------
+  ----------------------------------------------
+  3) Add a queue item to connect to the mail server
+  ----------------------------------------------
   */
 
   $queue = DrupalQueue::get('bounce_connection');
@@ -372,8 +375,7 @@ function bounce_cron() {
 }
 
 /**
- * Clear out the old data that we're no longer using: records of sent mail and
- * non-delivery reports.
+ * Remove old records of sent mail and non-delivery reports.
  */
 function bounce_delete_old_data() {
   // Delete old sent mail records - very straightforward.
@@ -395,9 +397,11 @@ function bounce_delete_old_data() {
 }
 
 /**
- * Cron queue callback. Connect to a mail server account and retrieve the
- * non-delivery report emails therein. Add the emails to the non-delivery
- * report processing queue, and delete them from the server.
+ * Cron queue callback.
+ *
+ * Connect to a mail server account and retrieve the non-delivery report
+ * emails therein. Add the emails to the non-delivery report processing
+ * queue, and delete them from the server.
  */
 function bounce_process_connection_queue_item($item) {
   // Obtain the connector.
@@ -616,8 +620,10 @@ function bounce_is_valid_connector($connector) {
 }
 
 /**
- * Load an include file for a component defined via a hook, i.e. that has
- * both a 'file' key and 'module' key in its definition array.
+ * Load an include file for a component defined via a hook.
+ *
+ * The component has both a 'file' key and 'module' key in its definition
+ * array. Use these to load the specified file.
  *
  * @param array $component
  *   A component definition.
@@ -641,7 +647,7 @@ function bounce_component_include($component) {
  *   An array listing the distinct emails matched, with no duplicates.
  */
 function _bounce_unique_mails_from_text($text) {
-   return array_values(array_unique(_bounce_mails_from_text($text)));
+  return array_values(array_unique(_bounce_mails_from_text($text)));
 }
 
 /**
@@ -666,7 +672,10 @@ function _bounce_mails_from_text($text) {
 }
 
 /**
- * Generate a UUID: http://www.php.net/manual/en/function.uniqid.php#94959
+ * Generate a UUID.
+ *
+ * This is taken from the following suggested implementation:
+ * http://www.php.net/manual/en/function.uniqid.php#94959
  *
  * @return string
  *   A UUID.

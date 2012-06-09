@@ -7,8 +7,10 @@
  */
 
 /**
- * Callback for the default blocker component. Find emails with a summed score
- * from non-delivery reports to put them past the threshold, and return them.
+ * Callback for the default blocker component.
+ *
+ * Find emails with a summed score from non-delivery reports to put them past
+ * the threshold, and return them.
  *
  * @return array
  *   An indexed array of email addresses to to be blocked.
@@ -288,8 +290,7 @@ function bounce_admin_code_machine_name($code) {
 }
 
 /**
- * Form constructor for the confirmation form to delete a specific code and its
- * scoring.
+ * Form constructor for the code deletion confirmation.
  *
  * @param array $data
  *   An associative array containing the code to delete.
@@ -326,8 +327,7 @@ function bounce_admin_delete_code_submit($form, &$form_state) {
 }
 
 /**
- * A helper function to return an array of code types suitable for use
- * in a select.
+ * Return an array of code types suitable for use in a select.
  *
  * @return array
  *   An associative array of $type_id => $type_title.

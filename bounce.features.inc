@@ -59,9 +59,9 @@ function bounce_code_features_export_options() {
 function bounce_code_features_export_render($module, $data) {
 
   /*
-   This code is basically copied from hook_features_export() implementations
-   found in the /include/*.inc files in the features module. Look through
-   those files for further examples of how to do this.
+  This code is basically copied from hook_features_export() implementations
+  found in the /include/*.inc files in the features module. Look through
+  those files for further examples of how to do this.
   */
 
   $output = array();
@@ -127,9 +127,9 @@ function bounce_code_features_revert($module) {
 function bounce_code_features_export($data, &$export, $module_name = '') {
 
   /*
-   This code is basically copied from hook_features_export() implementations
-   found in the /include/*.inc files in the features module. Look through
-   those files for further examples of how to do this.
+  This code is basically copied from hook_features_export() implementations
+  found in the /include/*.inc files in the features module. Look through
+  those files for further examples of how to do this.
   */
 
   $export['dependencies']['features'] = 'features';

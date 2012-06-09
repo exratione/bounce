@@ -11,8 +11,9 @@
  */
 
 /**
- * Non-delivery report code types are declared. These have no functional
- * meaning beyond helping to categorize non-delivery report codes.
+ * Non-delivery report code types are declared.
+ *
+ * These have no functional meaning beyond helping to categorize non-delivery report codes.
  *
  * @return array
  *   An associative array of bounce code types.
@@ -41,8 +42,7 @@ function hook_bounce_code_type() {
 }
 
 /**
- * Non-delivery report code types are declared, and the implementing module
- * can now alter those declarations.
+ * The implementing module can now alter report code type declarations.
  *
  * @param array $types
  *   An associative array of code type definitions.
@@ -54,8 +54,10 @@ function hook_bounce_code_type_alter(&$types) {
 
 
 /**
- * Specify analysis components that will extract a code and email address
- * from a non-delivery report. The returned array has the form:
+ * Specify analysis components.
+ *
+ * An analysis component extracts a code and email address from a non-delivery
+ * report. The returned array has the form:
  *
  * array(
  *   'default' => array(
@@ -136,8 +138,7 @@ function hook_bounce_analyst() {
 }
 
 /**
- * Analyst components are declared, and the implementing module may now alter
- * these declarations.
+ * The implementing module may now alter analysis component declarations.
  *
  * @param array $analysts
  *   An associative array of analyst component definitions.
@@ -150,8 +151,9 @@ function hook_bounce_analyst_alter(&$analysts) {
 }
 
 /**
- * A non-delivery report is analyzed, and the implementing module can alter
- * that analysis. The provided analysis will have the following format:
+ * The implementing module may now alter a non-delivery report analysis.
+ *
+ * The provided analysis will have the following format:
  *
  * array(
  *   'code' => $code or '' // the code assigned to the non-delivery report
@@ -178,7 +180,9 @@ function hook_bounce_analysis_alter(&$analysis, $report) {
 }
 
 /**
- * Specify connectors for communicating with a mail server in order to
+ * Specify connector components.
+ *
+ * A connector component communicates with a mail server in order to
  * retrieve non-delivery report emails. The type definitions include
  * callback functions for implementation and an array of parameters that will
  * be passed to that function. The return from an implementation of this hook
@@ -264,8 +268,7 @@ function hook_bounce_connector() {
 }
 
 /**
- * Connector components are declared, and the implementing module may now
- * alter these declarations.
+ * The implementing module may now alter connector component declarations.
  *
  * @param array $connectors
  *   An array of connector definitions.
@@ -278,10 +281,11 @@ function hook_bounce_connector_alter(&$connectors) {
 }
 
 /**
- * Specify blocker components that will examine stored non-delivery report
- * analysis records and decide which mails must be blocked from receiving
- * future emails. A blocker component also manages deletion of old
- * non-delivery report records.
+ * Specify blocker components.
+ *
+ * Blocker components examine stored non-delivery report analysis records and
+ * decide which mails must be blocked from receiving future emails. A blocker
+ * component also manages deletion of old non-delivery report records.
  *
  * CONFIGURED_CHECK_CALLBACK
  *
@@ -328,8 +332,7 @@ function hook_bounce_blocker() {
 }
 
 /**
- * Blocker components are declared, and the implementing module may now
- * alter these declarations.
+ * The implementing module may now alter blocker component declarations.
  *
  * @param array $blockers
  *   An associative array of blocker component definitions.
@@ -342,7 +345,7 @@ function hook_bounce_blocker_alter(&$blockers) {
 }
 
 /**
- * Email addresses have been blocked.
+ * Invoked when email addresses have been blocked.
  *
  * @param array $mails
  *   An indexed array of email addresses that have just been blocked.
@@ -352,7 +355,7 @@ function hook_bounce_mails_blocked($mails) {
 }
 
 /**
- * Email addresses have been unblocked.
+ * Invoked when email addresses have been unblocked.
  *
  * @param array $mails
  *   An indexed array of email addresses that have just been unblocked.

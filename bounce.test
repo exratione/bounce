@@ -347,7 +347,7 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Is the mail header check for an autoreply working?
+   * Test to see that the mail header check for an autoreply is working.
    */
   protected function runTestAnalystIsAutoreply() {
     $headers = array(
@@ -361,8 +361,7 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test the function for stripping blocked addresses from an RFC 2822
-   * address string.
+   * Test stripping blocked addresses from an RFC 2822 address string.
    */
   protected function runTestBounceRemoveBlockedAddresses() {
     $to = 'Mr. A <mra@example.com>, 3@example.com, To 2 <2@example.com>, moremail@example.com';
@@ -701,6 +700,8 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Test blocked mail registration messaging.
+   *
    * Is the message correctly displayed when a registration attempt uses a
    * blocked email?
    */
@@ -723,6 +724,8 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Test blocked mail password reset messaging.
+   *
    * Is the message correctly displayed when a password reset attempt
    * references an account with a blocked email?
    */
@@ -743,8 +746,7 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Check to see that the messages on login and the account page are displayed
-   * for a user with a blocked email.
+   * Test blocked user messages on login and the account page.
    */
   protected function runTestLoginAndAccountPageMessages() {
     $message = variable_get('bounce_notify_user_message', 'MISSING VARIABLE');
@@ -851,8 +853,7 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test the viewer for non-delivery reports associated with a specific
-   * blocked mail.
+   * Test the viewer for non-delivery reports for a specific blocked mail.
    */
   protected function runTestAdminNonDeliveryReportView() {
     $this->drupalLogin($this->admin_user);
@@ -1026,8 +1027,7 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Exercise code for retrieval of a mail from the server using the test
-   * connector.
+   * Test retrieval of a mail from the server using the test connector.
    */
   protected function runTestConnector() {
     // Deliver a fake non-delivery report message via the connector test class.
@@ -1135,8 +1135,7 @@ class BounceTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Make a full cron run with a test connector, and exercise the code to block
-   * a mail.
+   * Make a cron run with a test connector. Exercise the code to block a mail.
    *
    * By the time this runs, the prior web settings form tests will have left
    * enough configuration filled in for the various cron-called configuration
@@ -1397,6 +1396,8 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Test obtaining mail parts.
+   *
    * Test the recursive function for getting the data from a multipart mail
    * given the structure.
    */

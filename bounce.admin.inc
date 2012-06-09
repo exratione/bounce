@@ -184,6 +184,8 @@ function bounce_component_options($component_type) {
 */
 
 /**
+ * Form constructor for component configuration forms.
+ *
  * This form constructor is simply a pass-through to pick up a configuration
  * form for the currently defined component.
  */
@@ -204,8 +206,9 @@ function bounce_admin_component_configuration($form, &$form_state, $component_ty
 */
 
 /**
- * Form constructor for the admin page displaying blocked emails, and allowing
- * filtering and unblocking of selected emails.
+ * Form constructor for the admin page displaying blocked emails.
+ *
+ * The form also allows the admin to filter and unblock selected emails.
  *
  * @see bounce_admin_blocked_validate()
  * @see bounce_admin_blocked_submit()
@@ -394,8 +397,9 @@ function bounce_admin_blocked_submit($form, &$form_state) {
 
 /**
  * Form submission handler for the unblock mails confirmation form.
- * Delete the blocked mails from the database, as well as any non-delivery
- * reports that were used to block them.
+ *
+ * This deletes the blocked mails from the database, as well as any
+ * non-delivery reports that were used to block them.
  */
 function bounce_admin_unblock_mails($form, &$form_state) {
   $blocked_ids = array_keys($form_state['values']['unblocked']);
@@ -491,8 +495,9 @@ function bounce_admin_view_non_delivery_report_list() {
 }
 
 /**
- * Present a table of non-delivery reports associated with a blocked mail that
- * loads the text of the report emails via ajax.
+ * Present a table of non-delivery reports associated with a blocked mail.
+ *
+ * Text of the report emails is loaded via ajax.
  *
  * @param array $blocked_mail
  *   A associative array containing the column names and values for a single
@@ -564,8 +569,9 @@ function bounce_admin_view_blocked_mail($blocked_mail) {
 }
 
 /**
- * Page callback to view a specific non-delivery report. The result can be
- * returned as AJAX or a normal page render array.
+ * Page callback to view a specific non-delivery report.
+ *
+ * The page can be returned as AJAX or a normal page render array.
  *
  * @param string $call_type
  *   Values 'ajax' or 'nojs' to show whether this an ajax call or not.

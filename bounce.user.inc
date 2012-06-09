@@ -78,9 +78,10 @@ function bounce_form_user_register_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Validation function for the registration form. Send back an error
- * if a user is registering with a blocked mail, and if the admin settings
- * say we should do that.
+ * Validation function for the registration form.
+ *
+ * Send back an error if a user is registering with a blocked mail, and if the
+ * admin settings say we should do that.
  */
 function bounce_user_register_form_validate($form, &$form_state) {
   $notify = variable_get('bounce_error_on_registration', TRUE);
@@ -108,9 +109,10 @@ function bounce_form_user_pass_alter(&$form, &$form_state) {
 }
 
 /**
- * Validation function for the reset password form. Send back an error
- * if a user enters a blocked mail, and if the admin settings
- * say we should do that.
+ * Validation function for the reset password form.
+ *
+ * Send back an error if a user enters a blocked mail, and if the admin
+ * settings say we should do that.
  */
 function bounce_user_pass_validate($form, &$form_state) {
   $user = user_load_by_mail($form_state['values']['name']);

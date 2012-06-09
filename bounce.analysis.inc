@@ -14,13 +14,7 @@
 */
 
 /**
- * Store the results of an analysis if it contains anything worth storing. The
- * analysis array should be at least:
- *
- * array(
- *   'code' => $code or ''
- *   'mail' => $mail or ''
- * )
+ * Store an analysis to the database if it contains anything worth storing.
  *
  * In order to be stored, there must be both a code and mail identified.
  *
@@ -45,7 +39,10 @@ function bounce_record_non_delivery_report_analysis($analysis, $analyst, $report
 }
 
 /**
- * To be valid and complete, the analysis array should be at least:
+ * Determine whether an analysis is complete.
+ *
+ * To be valid and complete, the analysis array should at minimum contain the
+ * following:
  *
  * array(
  *   'code' => non-empty string
@@ -121,9 +118,9 @@ function bounce_analyze_non_delivery_report($report) {
   }
 
   /*
-   ---------------------------------------------------------------
-   Look through the non-delivery report email headers first.
-   ---------------------------------------------------------------
+  ---------------------------------------------------------------
+  Look through the non-delivery report email headers first.
+  ---------------------------------------------------------------
   */
 
   $header_part = array_shift($report);
@@ -138,13 +135,13 @@ function bounce_analyze_non_delivery_report($report) {
   }
 
   /*
-   ---------------------------------------------------------------
-   Now start in on the rest of it, and try to establish a code.
+  ---------------------------------------------------------------
+  Now start in on the rest of it, and try to establish a code.
 
-   We're looking for the identifying header from the original email that
-   generated this non-delivery report, and also any SMTP codes or other
-   information we can use to categorize the report.
-   ---------------------------------------------------------------
+  We're looking for the identifying header from the original email that
+  generated this non-delivery report, and also any SMTP codes or other
+  information we can use to categorize the report.
+  ---------------------------------------------------------------
   */
 
   // Determine a response code.
@@ -165,9 +162,9 @@ function bounce_analyze_non_delivery_report($report) {
   }
 
   /*
-   ---------------------------------------------------------------
-   Now try to identify the email address for the originating email.
-   ---------------------------------------------------------------
+  ---------------------------------------------------------------
+  Now try to identify the email address for the originating email.
+  ---------------------------------------------------------------
   */
 
   $ignored_mails = bounce_analysis_ignored_mails();
@@ -266,10 +263,12 @@ function bounce_analysis_is_autoreply($headers) {
 }
 
 /**
- * Helper function to parse out an SMTP response code or other determination
- * from text. In the grand scheme of things this is not a very sophisticated
- * approach. For a much more sophisticated consideration, you might look at
- * something like the BounceHandler class:
+ * Determine a bounce code given text from a non-delivery report.
+ *
+ * This is a helper function to parse out an SMTP response code or other sort
+ * of code from text. In the grand scheme of things this is not a very
+ * sophisticated approach. For a much more sophisticated consideration, you
+ * might look at something like the BounceHandler class:
  *
  * http://www.phpclasses.org/browse/file/11665.html
  *
@@ -333,6 +332,8 @@ function bounce_analysis_code_from_text($text) {
 }
 
 /**
+ * Obtain the most frequently referenced mail from a non-delivery report.
+ *
  * Check all the non-header sections of a bounce report data structure, and
  * count the instances of specific email addresses.
  *
@@ -399,8 +400,10 @@ function bounce_analysis_get_most_frequent_mail($report, $ignored_emails = array
 }
 
 /**
- * Return an indexed array of email addresses to disregard while digging
- * through non-delivery reports.
+ * Return an indexed array of ignored email addresses.
+ *
+ * These email addresses should be discarded and ignored while digging through
+ * non-delivery reports.
  *
  * @return array
  *   An indexed array of email addresses.
