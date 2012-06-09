@@ -2,19 +2,24 @@
 
 /**
  * @file
- * Implementation and documentation of hooks defined by the Bounce module.
+ * Documentation of the hooks defined by the Bounce module.
  */
 
 /**
- * Implements hook_bounce_code_type().
- *
- * Return the default bounce code types. These are ornamental only, but
- * help keep things usefully categorized.
+ * @defgroup bounce_hooks Hooks defined by the Bounce module
+ * @{
+ */
+
+/**
+ * Non-delivery report code types are declared. These have no functional
+ * meaning beyond helping to categorize non-delivery report codes.
  *
  * @return array
  *   An associative array of bounce code types.
  */
-function bounce_bounce_code_type() {
+function hook_bounce_code_type() {
+  // The default bounce code types. These are ornamental only, but
+  // but help keep things usefully categorized.
   $types = array();
   $types['rfc821'] = array(
     'title' => t('RFC 821'),
@@ -36,21 +41,20 @@ function bounce_bounce_code_type() {
 }
 
 /**
- * Implements hook_bounce_code_type_alter().
+ * Non-delivery report code types are declared, and the implementing module
+ * can now alter those declarations.
  *
  * @param array $types
  *   An associative array of code type definitions.
  */
-function bounce_bounce_code_type_alter(&$types) {
+function hook_bounce_code_type_alter(&$types) {
   // e.g. alter the name of one of the default code types.
   // $types['rfc821']['title'] = t('RFC 821');
 }
 
 
 /**
- * Implements hook_bounce_analyst().
- *
- * Specify an analysis component that will extract a code and email address
+ * Specify analysis components that will extract a code and email address
  * from a non-delivery report. The returned array has the form:
  *
  * array(
@@ -90,12 +94,12 @@ function bounce_bounce_code_type_alter(&$types) {
  *
  * callback($non_delivery_report)
  *
- * The paramter $non-delivery_report is an indexed array of message parts. Each
- * message part is in turn an array containing at least 'charset' and 'data'
- * keys as shown below. The first part will be mail headers, the rest body and
- * attachment parts. Different mail servers vary greatly as to how they arrange
- * message parts, so be prepared to look through it all - even a simple text
- * body may be split up into several parts.
+ * The parameter $non-delivery_report is an indexed array of message parts.
+ * Each message part is in turn an array containing at least 'charset' and
+ * 'data' keys as shown below. The first part will be mail headers, the rest
+ * body and attachment parts. Different mail servers vary greatly as to how
+ * they arrange message parts, so be prepared to look through it all - even a
+ * simple text body may be split up into several parts.
  *
  * $report = array(
  *  [0] => array(
@@ -119,7 +123,7 @@ function bounce_bounce_code_type_alter(&$types) {
  * @return array
  *   An array of analyst definitions.
  */
-function bounce_bounce_analyst() {
+function hook_bounce_analyst() {
   $analysts = array();
   $analysts['default'] = array(
     'title' => t('Default: simple mail header and body parser'),
@@ -132,22 +136,22 @@ function bounce_bounce_analyst() {
 }
 
 /**
- * Implements hook_bounce_analyst_alter().
+ * Analyst components are declared, and the implementing module may now alter
+ * these declarations.
  *
  * @param array $analysts
  *   An associative array of analyst component definitions.
  *
- * @see bounce_bounce_analyst()
+ * @see hook_bounce_analyst()
  */
-function bounce_bounce_analyst_alter(&$analysts) {
+function hook_bounce_analyst_alter(&$analysts) {
   // For example, change the name of the default analyst component
   // $analysts['default']['title'] = t('new name');
 }
 
 /**
- * Implements hook_bounce_analysis_alter().
- *
- * The provided analysis will have the following format:
+ * A non-delivery report is analyzed, and the implementing module can alter
+ * that analysis. The provided analysis will have the following format:
  *
  * array(
  *   'code' => $code or '' // the code assigned to the non-delivery report
@@ -159,9 +163,9 @@ function bounce_bounce_analyst_alter(&$analysts) {
  * @param array $report
  *   A non-delivery report email, formatted as an array of parts.
  *
- * @see bounce_bounce_analyst()
+ * @see hook_bounce_analyst()
  */
-function bounce_bounce_analysis_alter(&$analysis, $report) {
+function hook_bounce_analysis_alter(&$analysis, $report) {
   // For example, change the code assigned based on an examination of the
   // non-delivery report
   // $analysis['code'] = '4.1.1';
@@ -174,9 +178,7 @@ function bounce_bounce_analysis_alter(&$analysis, $report) {
 }
 
 /**
- * Implements hook_bounce_connector().
- *
- * Specify a connector for communicating with a mail server in order to
+ * Specify connectors for communicating with a mail server in order to
  * retrieve non-delivery report emails. The type definitions include
  * callback functions for implementation and an array of parameters that will
  * be passed to that function. The return from an implementation of this hook
@@ -249,7 +251,7 @@ function bounce_bounce_analysis_alter(&$analysis, $report) {
  * @return array
  *   An associative array of connector definitions.
  */
-function bounce_bounce_connector() {
+function hook_bounce_connector() {
   $connectors = array();
   $connectors['default'] = array(
     'title' => t('Default: POP3 or IMAP'),
@@ -262,24 +264,23 @@ function bounce_bounce_connector() {
 }
 
 /**
- * Implements hook_bounce_connector_alter().
+ * Connector components are declared, and the implementing module may now
+ * alter these declarations.
  *
  * @param array $connectors
  *   An array of connector definitions.
  *
- * @see bounce_bounce_connector()
+ * @see hook_bounce_connector()
  */
-function bounce_bounce_connector_alter(&$connectors) {
+function hook_bounce_connector_alter(&$connectors) {
   // For example, change the name of the default connector
   // $connectors['default']['title'] = t('Default: POP3/IMAP');
 }
 
 /**
- * Implements hook_bounce_blocker().
- *
- * Specify a blocker component that will examine stored non-delivery report
+ * Specify blocker components that will examine stored non-delivery report
  * analysis records and decide which mails must be blocked from receiving
- * future emails. The blocker component also manages deletion of old
+ * future emails. A blocker component also manages deletion of old
  * non-delivery report records.
  *
  * CONFIGURED_CHECK_CALLBACK
@@ -314,7 +315,7 @@ function bounce_bounce_connector_alter(&$connectors) {
  * @return array
  *   An associative array of blocker definitions.
  */
-function bounce_bounce_blocker() {
+function hook_bounce_blocker() {
   $blockers = array();
   $blockers['default'] = array(
     'title' => t('Default: block by threshold score'),
@@ -327,34 +328,39 @@ function bounce_bounce_blocker() {
 }
 
 /**
- * Implements hook_bounce_blocker_alter().
+ * Blocker components are declared, and the implementing module may now
+ * alter these declarations.
  *
  * @param array $blockers
  *   An associative array of blocker component definitions.
  *
- * @see bounce_bounce_blocker()
+ * @see hook_bounce_blocker()
  */
-function bounce_bounce_blocker_alter(&$blockers) {
+function hook_bounce_blocker_alter(&$blockers) {
   // For example, change the name of the default blocker component
   // $blockers['default']['title'] = t('Default: block by threshold score');
 }
 
 /**
- * Implements hook_bounce_mails_blocked().
+ * Email addresses have been blocked.
  *
  * @param array $mails
  *   An indexed array of email addresses that have just been blocked.
  */
-function bounce_bounce_mails_blocked($mails) {
+function hook_bounce_mails_blocked($mails) {
 
 }
 
 /**
- * Implements hook_bounce_mails_unblocked().
+ * Email addresses have been unblocked.
  *
  * @param array $mails
  *   An indexed array of email addresses that have just been unblocked.
  */
-function bounce_bounce_mails_unblocked($mails) {
+function hook_bounce_mails_unblocked($mails) {
 
 }
+
+/**
+ * @}
+ */

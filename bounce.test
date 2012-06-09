@@ -139,7 +139,6 @@ class BounceTestCase extends DrupalWebTestCase {
     bounce_include('analysis');
     bounce_include('blocker');
     bounce_include('connector');
-    bounce_include('cron');
 
     // Unit tests.
     $this->runTestBounceEmailsFromText();

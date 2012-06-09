@@ -34,7 +34,6 @@ function bounce_get_mailserver_connector($params = array()) {
   // hook_bounce_connect_types_alter() to define a different type or different
   // callback for the POP3, POP3S, IMAP, and IMAPS types.
   $class = variable_get('bounce_connector_class', 'BounceMailServerConnector');
-  bounce_include('connector.class');
   return new $class($params);
 }
 

@@ -7,6 +7,30 @@
  */
 
 /**
+ * Implements hook_preprocess_page().
+ *
+ * Deliver messages to users who are blocked when they visit their own account
+ * page or account editing page.
+ */
+function bounce_preprocess_page(&$vars) {
+  global $user;
+  if (!$user->uid) {
+    return;
+  }
+
+  $path = current_path();
+  if (preg_match('/^user\/' . $user->uid . '($|\/edit$)/', $path) && ($warn = variable_get('bounce_notify_user_on_account_page', TRUE))) {
+    $account = user_load($user->uid);
+    if ($account->bounce_mail_blocked) {
+      $message = variable_get('bounce_notify_user_message');
+      if ($message) {
+        drupal_set_message(check_plain($message), 'warning', FALSE);
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_user_load().
  *
  * Add a property to the user object to show whether or not the user's email
