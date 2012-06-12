@@ -188,7 +188,7 @@ or she will not receive mail rather than just silently failing.
 3) hook_bounce_analyst()
 4) hook_bounce_analyst_alter(&$analysts)
 5) hook_bounce_blocker
-6) hook_bounce_blocker_alter(&$analysts)
+6) hook_bounce_blocker_alter(&$blockers)
 
 If you want to make available new components then you can create the
 component and declare it as an option for use via implementations of these
