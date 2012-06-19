@@ -184,14 +184,16 @@ function bounce_requirements() {
   $t = get_t();
   $requirements['bounce_php_imap'] = array(
     'title' => $t('PHP IMAP Extension'),
-    'description' => $t('Bounce requires the PHP IMAP extension to be installed. See <a href="@url">the PHP IMAP documentation</a> for installation instructions.', array(
+    'description' => $t('Bounce requires the PHP IMAP extension to be enabled. See <a href="@url">the PHP IMAP documentation</a> for installation instructions.', array(
       '@url' => 'http://www.php.net/manual/en/book.imap.php',
     )),
     'severity' => REQUIREMENT_OK,
+    'value' => $t('Enabled'),
   );
   // Check for existence of php-imap.
   if (!function_exists('imap_open')) {
     $requirements['bounce_php_imap']['severity'] = REQUIREMENT_ERROR;
+    $requirements['bounce_php_imap']['value'] = $t('Not enabled');
   }
   return $requirements;
 }
