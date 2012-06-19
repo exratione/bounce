@@ -111,8 +111,13 @@ the sum of recorded scores for any particular email address exceeds a
 threshold: those that do are marked and future delivery to these email
 addresses is blocked.
 
+Note that because the Blocker runs first in a cron run, and because the 
+Connector and Analyst run as queues, it takes two cron runs for a mail to 
+become blocked. On the first run, the non-delivery report is obtained and
+analyzed. On the second run that analysis is used to block the mail.
+
 Records of past non-delivery reports are cleared out when they become too
-old, so an address will only be marked and blocked if it gains enough
+old, so an email address will only be marked and blocked if it gains enough
 non-delivery reports in a short enough time. The default settings for
 Bounce will block email addresses fairly aggressively, reasoning that it
 is better to deliver too few emails than to look like a spammer or a
@@ -170,11 +175,21 @@ email and marking of servers as spam sources, such as the Sender Policy
 Framework and other similar schemes, and you are encouraged to research
 further.
 
--- Blocked Mails and Users --
+-- Blocked Mails, Not Blocked Users --
 
-Blocked mails are maintained independently of users. They are not deleted
-when a user account is removed, and it is not necessary for a user account
-to exist for a specific mail to be blocked.
+Blocked mails are maintained independently of users. An email address can be 
+blocked due to non-delivery reports even if no user is associated with it, and
+a blocked mail is not removed when an associated user account is removed.
+
+When an email address is blocked, all emails sent to that address through the
+Drupal mail API will be blocked by Bounce. Any attempt to register or request
+a password reminder for that email address will display a warning message and 
+fail. 
+
+If the blocked email address is associated with a user account, then that user
+is not blocked from logging in. The user will receive no mail from the site, 
+and will be warned that their email address is blocked and should be changed 
+when logging in and when visiting their account page. 
 
 The administrative settings for Bounce allow notifications to be set for
 login, user account editing, password reset, and registration using
