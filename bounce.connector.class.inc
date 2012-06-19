@@ -42,9 +42,9 @@ class BounceMailServerConnector {
   protected $protocol = NULL;
 
   /**
-   * Boolean: TRUE if connecting securely to the mailserver.
+   * String for encryption used: '', 'tls', or 'ssl'.
    */
-  protected $ssl = FALSE;
+  protected $encryption = '';
 
   /**
    * The login used to connect to the mailserver.
@@ -74,7 +74,8 @@ class BounceMailServerConnector {
    *
    * array(
    *   'server' => 'mail.mydomain.com',
-   *   'protocol' => 'pop3s',
+   *   'protocol' => 'pop3',
+   *   'encryption' => 'ssl',
    *   'port' => 993,
    *   'login' => 'me@mydomain.com',
    *   'password' => 'some string',
@@ -82,8 +83,9 @@ class BounceMailServerConnector {
    *   'timeout' => 5,
    * )
    *
-   * The available values for the protocol parameter are: ['pop3', 'pop3s',
-   * 'imap', 'imaps']. The 's' versions run over SSL.
+   * Available values for the protocol parameter are ['pop3','imap'].
+   *
+   * Available values for the encryption parameter are ['', 'tls', 'ssl'].
    *
    * The folder parameter should almost always be 'INBOX'.
    *
@@ -92,30 +94,13 @@ class BounceMailServerConnector {
    */
   public function __construct($params) {
     $this->server = $params['server'];
+    $this->protocol = $params['protocol'];
+    $this->encryption = $params['encryption'];
     $this->port = $params['port'];
     $this->login = $params['login'];
     $this->password = $params['password'];
     $this->folder = $params['folder'];
     $this->maxMailPartSizeBytes = $params['mail_part_size_limit'];
-
-    switch ($params['protocol']) {
-      case 'imap':
-        $this->protocol = 'imap';
-        break;
-
-      case 'imaps':
-        $this->protocol = 'imap';
-        $this->ssl = TRUE;
-      case 'pop3':
-        $this->protocol = 'pop3';
-        break;
-
-      case 'pop3s':
-      default:
-        $this->protocol = 'pop3';
-        $this->ssl = TRUE;
-        break;
-    }
 
     // Set the connection timeouts.
     $result = $this->imapTimeout(IMAP_OPENTIMEOUT, $params['timeout']);
@@ -143,11 +128,6 @@ class BounceMailServerConnector {
    *   TRUE on success, FALSE on error.
    */
   public function login() {
-    // The mail server may be self-signed if it is using SSL, so
-    // "novalidate-cert" is generally necessary. It might even be needed for
-    // non-SSL connections, depending on how the server is configured - and
-    // it doesn't hurt to have it there regardless.
-    $sslpart = ($this->ssl) ? 'ssl/novalidate-cert' : 'novalidate-cert';
     try {
       $this->connection = $this->imapOpen(
         $this->getMailboxString(),
@@ -426,8 +406,10 @@ class BounceMailServerConnector {
    *   The connection string.
    */
   protected function getMailboxString($with_user = FALSE) {
-    $inner = $this->server . ':' . $this->port . '/' . $this->protocol . '/';
-    $inner .= ($this->ssl) ? 'ssl/novalidate-cert' : 'novalidate-cert';
+    $inner = "{$this->server}:{$this->port}/{$this->protocol}";
+    if ($this->encryption) {
+      $inner .= "/{$this->encryption}/novalidate-cert";
+    }
     if ($with_user) {
       $inner .= '/"user=' . $this->login . '"';
     }

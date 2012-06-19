@@ -41,7 +41,8 @@ class BounceTestCase extends DrupalWebTestCase {
     bounce_include('connector.test');
     $this->connector = new $this->connector_class(array(
       'server' => 'localhost',
-      'protocol' => 'pop3s',
+      'protocol' => 'pop3',
+      'encryption' => 'ssl',
       'port' => 995,
       'login' => 'nobody',
       'password' => 'some string',
@@ -896,7 +897,8 @@ class BounceTestCase extends DrupalWebTestCase {
       'bounce_connector_server' => 'mail.example.com',
       'bounce_connector_login' => 'bounce@example.com',
       'bounce_connector_password' => 'none',
-      'bounce_connector_protocol' => 'pop3s',
+      'bounce_connector_protocol' => 'pop3',
+      'bounce_connector_encryption' => 'ssl',
       'bounce_connector_port' => 'not a number',
       'bounce_connector_max_reports_per_session' => 'not a number',
       'bounce_connector_timeout' => '0',
@@ -912,7 +914,8 @@ class BounceTestCase extends DrupalWebTestCase {
       'bounce_connector_server' => 'mail.example.com',
       'bounce_connector_login' => 'bounce@example.com',
       'bounce_connector_password' => 'none',
-      'bounce_connector_protocol' => 'pop3s',
+      'bounce_connector_protocol' => 'pop3',
+      'bounce_connector_encryption' => 'ssl',
       'bounce_connector_port' => 995,
       'bounce_connector_max_reports_per_session' => BOUNCE_DEFAULT_MAX_REPORTS_PER_SESSION,
       'bounce_connector_timeout' => BOUNCE_DEFAULT_CONNECTION_TIMEOUT,
@@ -1207,7 +1210,8 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
     parent::setUp();
     $params = array(
       'server' => 'mail.mydomain.com',
-      'protocol' => 'pop3s',
+      'protocol' => 'pop3',
+      'encryption' => 'ssl',
       'port' => 993,
       'login' => 'me@mydomain.com',
       'password' => 'some string',
@@ -1226,7 +1230,8 @@ class BounceConnectorTestCase extends DrupalWebTestCase {
       $this->assertIdentical($this->connector->$param, $params[$param]);
     }
     $this->assertIdentical($this->connector->protocol, 'pop3');
-    $this->assertTrue($this->connector->ssl);
+    $this->assertIdentical($this->connector->encryption, 'ssl');
+    $this->assertIdentical($this->connector->port, 993);
 
     // Doesn't actually do anything in this case.
     $this->connector->login();

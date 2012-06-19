@@ -82,7 +82,9 @@ Return-Path header: bounce@example.com
 and the following values in the Connector settings page:
 
 Server: mail.example.com
-Protocol: POP3S
+Protocol: POP3
+Encryption: SSL
+Post: 995
 Login: bounce
 Password: my_obscure_password
 

@@ -20,7 +20,8 @@ function bounce_get_mailserver_connector($params = array()) {
   $params += array(
     'server' => 'localhost',
     'protocol' => 'pop3',
-    'port' => 110,
+    'encryption' => 'ssl',
+    'port' => 993,
     'login' => '',
     'password' => '',
     'timeout' => variable_get('bounce_connector_timeout', BOUNCE_DEFAULT_CONNECTION_TIMEOUT),
@@ -31,9 +32,7 @@ function bounce_get_mailserver_connector($params = array()) {
 
   // Placing the connector class into a variable allows the test cases to use
   // a different class. Overriding this is not recommended for other modules -
-  // you should instead implement hook_bounce_connector() or
-  // hook_bounce_connect_types_alter() to define a different type or different
-  // callback for the POP3, POP3S, IMAP, and IMAPS types.
+  // you should instead implement hook_bounce_connector().
   $class = variable_get('bounce_connector_class', 'BounceMailServerConnector');
   return new $class($params);
 }
@@ -68,6 +67,7 @@ function bounce_connect() {
   $params = array(
     'server' => variable_get('bounce_connector_server'),
     'protocol' => variable_get('bounce_connector_protocol'),
+    'encryption' => variable_get('bounce_connector_encryption'),
     'port' => variable_get('bounce_connector_port'),
     'login' => variable_get('bounce_connector_login'),
     'password' => variable_get('bounce_connector_password'),
@@ -174,19 +174,28 @@ function bounce_connect_settings($form, &$form_state) {
   $form['connection']['bounce_connector_protocol'] = array(
     '#type' => 'select',
     '#title' => t('Protocol'),
-    '#description' => t('The protocol used to connect to the mail server. Most mail servers support POP3 and IMAP in both plain text and encrypted Secure Socket Layer (SSL) modes.'),
+    '#description' => t('The protocol used to connect to the mail server. Most mail servers support POP3 and IMAP.'),
     '#options' => array(
-      'pop3' => t('POP3 (Plain text, unsecure)'),
-      'pop3s' => t('POP3S (SSL, secure)'),
-      'imap' => t('IMAP (Plain text, unsecure)'),
-      'imaps' => t('IMAPS (SSL, secure)'),
+      'pop3' => t('POP3'),
+      'imap' => t('IMAP'),
     ),
-    '#default_value' => variable_get('bounce_connector_protocol', 'pop3s'),
+    '#default_value' => variable_get('bounce_connector_protocol', 'pop3'),
+  );
+  $form['connection']['bounce_connector_encryption'] = array(
+    '#type' => 'select',
+    '#title' => t('Encryption Mode'),
+    '#description' => t('The encryption mode used to secure connections to the mail server. Most mail servers support TLS connections on port 110 for POP3 and 143 for IMAP, SSL connections on port 993 for IMAP and 995 for POP3, and do not accept plain text connections on any port.'),
+    '#options' => array(
+      '' => t('None'),
+      'tls' => t('TLS'),
+      'ssl' => t('SSL'),
+    ),
+    '#default_value' => variable_get('bounce_connector_encryption', 'ssl'),
   );
   $form['connection']['bounce_connector_port'] = array(
     '#type' => 'textfield',
     '#title' => t('Port'),
-    '#description' => t('Attempt to connect to this port number. Most servers use the standard port that is set on selecting the protocol.'),
+    '#description' => t('Attempt to connect to this port number. Most servers use the standard port that is set on selecting the protocol and encryption mode.'),
     '#required' => TRUE,
     '#default_value' => variable_get('bounce_connector_port', 995),
   );
@@ -260,6 +269,10 @@ function bounce_connect_settings_validate($form, &$form_state) {
       return;
     }
   }
+
+  // This can be empty, so insert it after the general empty check.
+  $params['encryption'] = $form_state['values']['bounce_connector_encryption'];
+
   $valid = bounce_connect_validate($params);
   if (!$valid) {
     form_set_error('bounce_connector_server', t('Unable to log in to the specified account and server.'));

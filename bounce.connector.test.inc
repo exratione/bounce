@@ -210,7 +210,7 @@ class BounceTestMailServerConnector extends BounceMailServerConnector {
   public $server = NULL;
   public $port = NULL;
   public $protocol = NULL;
-  public $ssl = FALSE;
+  public $encryption = '';
   public $login = NULL;
   public $password = NULL;
   public $folder = NULL;

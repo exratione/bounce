@@ -407,6 +407,7 @@ function bounce_uninstall() {
   variable_del('bounce_connector_password');
   variable_del('bounce_connector_port');
   variable_del('bounce_connector_protocol');
+  variable_del('bounce_connector_encryption');
   variable_del('bounce_connector_timeout');
   variable_del('bounce_error_on_password_reset');
   variable_del('bounce_error_on_password_reset_message');

@@ -1,25 +1,49 @@
 Drupal.behaviors.bounce = {
   attach: function(context, settings) {
-    jQuery("#edit-bounce-connector-protocol", context).change(function(e) {
+    
+    /**
+     * Obtain the new port value for a given protocol and encryption mode.
+     * 
+     * @param encryption
+     *   Encryption mode, one of "", "tls", "ssl".
+     * @param protocol
+     *   Protocol used, one of "pop3", "imap".
+     *   
+     * @return
+     *   The port number.
+     */
+    var getPort = function(encryption, protocol) {
       var port = "";
-      switch(jQuery(this).val()) {
-        case "pop3":
-          port = 110;
-          break;
-
-        case "pop3s":
+      if (protocol == "pop3") {
+        if (encryption == "ssl") {
           port = 995;
-          break;
-
-        case "imap":
-          port = 143;
-          break;
-
-        case "imaps":
-          port = 993;
-          break;
+        }
+        else {
+          port = 110;
+        }
       }
-      jQuery("#edit-bounce-connector-port", context).val(port);
+      else if (protocol == 'imap') {
+        if (encryption == "ssl") {
+          port = 993;
+        }
+        else {
+          port = 143;
+        }
+      }
+      
+      return port;
+    };
+    
+    jQuery("#edit-bounce-connector-protocol", context).change(function(e) {
+      var encryption = jQuery("#edit-bounce-connector-encryption", context).val();
+      var protocol = jQuery(this).val();
+      jQuery("#edit-bounce-connector-port", context).val(getPort(encryption, protocol));
+    });
+    
+    jQuery("#edit-bounce-connector-encryption", context).change(function(e) {
+      var encryption = jQuery(this).val();
+      var protocol = jQuery("#edit-bounce-connector-protocol", context).val();
+      jQuery("#edit-bounce-connector-port", context).val(getPort(encryption, protocol));
     });
   }
 };
