@@ -41,21 +41,21 @@ hosting your Drupal site.
 
 For Bounce to know about outgoing mail, suitably alter it, and record the fact
 that it was sent, that mail must be sent through drupal_mail() - or at least
-through some similar mechanism that will invoke hook_mail_alter() so that 
-Bounce can do its work. Not all modules that provide new options for sending 
+through some similar mechanism that will invoke hook_mail_alter() so that
+Bounce can do its work. Not all modules that provide new options for sending
 mail do this - some skip the implementation of a MailSystemInterface class and
-do not use the core Drupal mail APIs. 
+do not use the core Drupal mail APIs.
 
-Future versions of Bounce will offer ways to work with this sort of mail 
-module, but as of now Bounce requires sent mail to go out via the core mail 
+Future versions of Bounce will offer ways to work with this sort of mail
+module, but as of now Bounce requires sent mail to go out via the core mail
 APIs or through modules that implement those APIs.
 
 4) Mail Delivery Mechanism Allows Return-Path to be Set
 
 Bounce sets the Return-Path mail header to a different value than the From
-header. Not all modules that provide new options for sending mail (i.e. 
+header. Not all modules that provide new options for sending mail (i.e.
 implement a MailSystemInterface class) permit this, and some ignore the
-Return-Path setting entirely. 
+Return-Path setting entirely.
 
 Again, modules that bypass hook_mail_alter() prevent Bounce from working, and
 that includes preventing Bounce from setting the necessary Return-Path header.
@@ -64,10 +64,10 @@ that includes preventing Bounce from setting the necessary Return-Path header.
 
 Ideally you should have your own mail server set up for your domain, and
 the mail module you are using will send all outgoing mail from your Drupal site
-through that server via the SMTP protocol. If you are not doing this, then you 
-have far more serious issues with mail deliverability than Bounce can help you 
-with - for example, sending from the Drupal server using sendmail on a Linux 
-system cannot respond correctly to greylisting, which looks very much like a 
+through that server via the SMTP protocol. If you are not doing this, then you
+have far more serious issues with mail deliverability than Bounce can help you
+with - for example, sending from the Drupal server using sendmail on a Linux
+system cannot respond correctly to greylisting, which looks very much like a
 spam sending robot's behavior.
 
 -- Mail Modules Known to Work or Not Work With Bounce --
@@ -135,8 +135,8 @@ the sum of recorded scores for any particular email address exceeds a
 threshold: those that do are marked and future delivery to these email
 addresses is blocked.
 
-Note that because the Blocker runs first in a cron run, and because the 
-Connector and Analyst run as queues, it takes two cron runs for a mail to 
+Note that because the Blocker runs first in a cron run, and because the
+Connector and Analyst run as queues, it takes two cron runs for a mail to
 become blocked. On the first run, the non-delivery report is obtained and
 analyzed. On the second run that analysis is used to block the mail.
 
@@ -169,7 +169,7 @@ access, so you want it to have its own account for non-delivery reports.
 As noted in the Requirements section above, not all of the options for
 sending mail from Drupal respect the Return-Path set in a mail message.
 
-Out of the box, Drupal 7 will correctly set the Return-Path header if 
+Out of the box, Drupal 7 will correctly set the Return-Path header if
 sending using the DefaultMailSystem mail system. This uses sendmail,
 however, to send mail from the local server directly. This will
 cause you all sorts of other issues - such as being unable to respond
@@ -201,19 +201,19 @@ further.
 
 -- Blocked Mails, Not Blocked Users --
 
-Blocked mails are maintained independently of users. An email address can be 
+Blocked mails are maintained independently of users. An email address can be
 blocked due to non-delivery reports even if no user is associated with it, and
 a blocked mail is not removed when an associated user account is removed.
 
 When an email address is blocked, all emails sent to that address through the
 Drupal mail API will be blocked by Bounce. Any attempt to register or request
-a password reminder for that email address will display a warning message and 
-fail. 
+a password reminder for that email address will display a warning message and
+fail.
 
 If the blocked email address is associated with a user account, then that user
-is not blocked from logging in. The user will receive no mail from the site, 
-and will be warned that their email address is blocked and should be changed 
-when logging in and when visiting their account page. 
+is not blocked from logging in. The user will receive no mail from the site,
+and will be warned that their email address is blocked and should be changed
+when logging in and when visiting their account page.
 
 The administrative settings for Bounce allow notifications to be set for
 login, user account editing, password reset, and registration using
