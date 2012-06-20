@@ -74,6 +74,7 @@ spam sending robot's behavior.
 
 Working:
   Drupal DefaultMailSystem (via sendmail, so not ideal)
+  Simplenews
   Swift Mailer
   
 Works if patched to allow setting of Return-Path:
