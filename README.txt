@@ -72,20 +72,17 @@ spam sending robot's behavior.
 
 -- Mail Modules Known to Work or Not Work With Bounce --
 
-Working:
+Works:
   Drupal DefaultMailSystem (via sendmail, so not ideal)
-  Simplenews
   Swift Mailer
   
 Works if patched to allow setting of Return-Path:
   PHPMailer, Patch: http://drupal.org/node/1505444
   SMTP Authentication Support, Patch: http://drupal.org/node/1500296
+  Newsletter, uses SMTP Authentication Support
   
 Does not work because it bypasses hook_mail_alter():
   ManyMail
-  
-Others:
-  Newsletter, uses SMTP Authentication Support
 
 -- Installation and Configuration --
 
@@ -189,6 +186,9 @@ configured to override the Return-Path passed to it in an SMTP session.
 
 You should absolute, definitely, always be sending outgoing mail through a
 full-featured mail server, and not via sendmail on the local web server.
+For most Drupal developers, this means using a mail module like SMTP
+Authentication Support or PHPMailer.
+
 In terms of looking like a spammer, the harm you do yourself by sending
 from the local web server will likely outweigh most of what Bounce can do
 for you. For example, not correctly handling greylisting is the sign of a
