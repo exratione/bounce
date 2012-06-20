@@ -648,7 +648,7 @@ class BounceTestCase extends DrupalWebTestCase {
       'charset' => 'utf-8',
     );
     $report[] = array(
-      'data' => BOUNCE_MAIL_HEADER_ID_KEY . ': ' . $header_id_1 . ' blah blah analysis_test_1@example.com blah spam blocked',
+      'data' => variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME) . ': ' . $header_id_1 . ' blah blah analysis_test_1@example.com blah spam blocked',
       'charset' => 'utf-8',
     );
     $analysis = array(
@@ -668,7 +668,7 @@ class BounceTestCase extends DrupalWebTestCase {
       'charset' => 'utf-8',
     );
     $report[] = array(
-      'data' => BOUNCE_MAIL_HEADER_ID_KEY . ': ' . $header_id_1 . ' blah 550 blah analysis_test_1@example.com blah spam blocked',
+      'data' => variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME) . ': ' . $header_id_1 . ' blah 550 blah analysis_test_1@example.com blah spam blocked',
       'charset' => 'utf-8',
     );
     $analysis = array(
@@ -688,7 +688,7 @@ class BounceTestCase extends DrupalWebTestCase {
       'charset' => 'utf-8',
     );
     $report[] = array(
-      'data' => BOUNCE_MAIL_HEADER_ID_KEY . ': ' . $header_id_1 . ' blah 5.5.1 blah blah',
+      'data' => variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME) . ': ' . $header_id_1 . ' blah 5.5.1 blah blah',
       'charset' => 'utf-8',
     );
     $analysis = array(
@@ -779,6 +779,7 @@ class BounceTestCase extends DrupalWebTestCase {
 
     $edit = array(
       'bounce_mail_header_return_path' => 'not a valid mail',
+      'bounce_mail_header_name' => 'invalid name?',
       'bounce_connector' => BOUNCE_DEFAULT_CONNECTOR,
       'bounce_analyst' => BOUNCE_DEFAULT_ANALYST,
       'bounce_blocker' => BOUNCE_DEFAULT_BLOCKER,
@@ -788,11 +789,13 @@ class BounceTestCase extends DrupalWebTestCase {
     );
     $this->drupalPost('admin/config/people/bounce/settings', $edit, t('Save configuration'));
     $this->assertRaw(t('Please enter a valid email address.'));
+    $this->assertRaw(t('Mail header name must contain only letters, underscores, and dashes.'));
     $this->assertRaw(t('Maximum report age must be a whole number of days.'));
     $this->assertRaw(t('Maximum sent mail record age must be a whole number of days.'));
 
     $edit = array(
       'bounce_mail_header_return_path' => 'bounce@example.com',
+      'bounce_mail_header_name' => BOUNCE_DEFAULT_MAIL_HEADER_NAME,
       'bounce_connector' => BOUNCE_DEFAULT_CONNECTOR,
       'bounce_analyst' => BOUNCE_DEFAULT_ANALYST,
       'bounce_blocker' => BOUNCE_DEFAULT_BLOCKER,

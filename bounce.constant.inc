@@ -57,9 +57,9 @@ define('BOUNCE_DEFAULT_ANALYST', 'default');
 define('BOUNCE_DEFAULT_BLOCKER', 'default');
 
 /**
- * The key for the ID inserted into the headers of outgoing mail.
+ * The default key for the ID inserted into the headers of outgoing mail.
  */
-define('BOUNCE_MAIL_HEADER_ID_KEY', 'x-bounce-identifier');
+define('BOUNCE_DEFAULT_MAIL_HEADER_NAME', 'x-bounce-identifier');
 
 /**
  * Indicates that a non-delivery report has not been used to block an email

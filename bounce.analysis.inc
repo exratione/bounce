@@ -177,7 +177,7 @@ function bounce_analyze_non_delivery_report($report) {
   // the headers of the original mail.
   foreach ($report as $part) {
     $match = array();
-    $matched = preg_match('/' . BOUNCE_MAIL_HEADER_ID_KEY . '\s*:\s*([^\s\r\n]+)/', $part['data'], $match);
+    $matched = preg_match('/' . variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME) . '\s*:\s*([^\s\r\n]+)/', $part['data'], $match);
     if ($matched) {
       $analysis['header_id'] = $match[1];
       $mails = db_select('bounce_sent', 's')

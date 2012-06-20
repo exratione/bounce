@@ -32,6 +32,13 @@ function bounce_admin_settings($form, &$form_state) {
     '#description' => t('Enter the email address that will receive non-delivery reports, e.g. @email. It will be added as the "Return-Path" header to outgoing emails.', array('@email' => 'bounces@' . $_SERVER['SERVER_NAME'])),
     '#default_value' => variable_get('bounce_mail_header_return_path', ''),
   );
+  $form['general']['bounce_mail_header_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Mail header name'),
+    '#required' => TRUE,
+    '#description' => t('Bounce adds a unique ID header to each outgoing mail sent via !link, and looks for that header when analyzing non-delivery reports. This is the header name, and must contain only letters, underscores, and dashes.', array('!link' => l('drupal_mail()', 'http://api.drupal.org/api/drupal/includes%21mail.inc/function/drupal_mail/7'))),
+    '#default_value' => variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME),
+  );
 
   $form['components'] = array(
     '#type' => 'fieldset',
@@ -155,6 +162,9 @@ function bounce_admin_settings_validate($form, &$form_state) {
   }
   if (!preg_match('/^\d+$/', $values['bounce_max_sent_age_days'])) {
     form_set_error('bounce_max_sent_age_days', t('Maximum sent mail record age must be a whole number of days.'));
+  }
+  if (!preg_match('/^[a-z_\-]+$/i', $values['bounce_mail_header_name'])) {
+    form_set_error('bounce_mail_header_name', t('Mail header name must contain only letters, underscores, and dashes.'));
   }
 }
 

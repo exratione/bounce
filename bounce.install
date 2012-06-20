@@ -413,6 +413,7 @@ function bounce_uninstall() {
   variable_del('bounce_error_on_password_reset_message');
   variable_del('bounce_error_on_registration');
   variable_del('bounce_error_on_registration_message');
+  variable_del('bounce_mail_header_name');
   variable_del('bounce_mail_header_return_path');
   variable_del('bounce_max_report_age_days');
   variable_del('bounce_max_sent_age_days');

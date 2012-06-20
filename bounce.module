@@ -787,10 +787,11 @@ function bounce_mail_alter(&$message) {
   // If there is more than one email then they all get the same header.
   // That makes it more of a pain to figure out which one generated a
   // non-delivery report later on, but oh well.
-  $header_id = _bounce_generate_uuid();
-  $message['headers'][BOUNCE_MAIL_HEADER_ID_KEY] = $header_id;
+  $header_id_key = variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME);
+  $header_id_value = _bounce_generate_uuid();
+  $message['headers'][$header_id_key] = $header_id_value;
   $data = array(
-    'header_id' => $header_id,
+    'header_id' => $header_id_value,
     'created' => time(),
   );
   foreach ($emails as $email) {
