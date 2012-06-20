@@ -37,32 +37,54 @@ e.g. automatic responses sent to the account bounces@example.com. That
 account must be accessible via POP or IMAP protocols from the server
 hosting your Drupal site.
 
-3) Mail Delivery Mechanism Allows Return-Path to be Set
+3) Mail is Sent Through drupal_mail() or Something Very Similar
+
+For Bounce to know about outgoing mail, suitably alter it, and record the fact
+that it was sent, that mail must be sent through drupal_mail() - or at least
+through some similar mechanism that will invoke hook_mail_alter() so that 
+Bounce can do its work. Not all modules that provide new options for sending 
+mail do this - some skip the implementation of a MailSystemInterface class and
+do not use the core Drupal mail APIs. 
+
+Future versions of Bounce will offer ways to work with this sort of mail 
+module, but as of now Bounce requires sent mail to go out via the core mail 
+APIs or through modules that implement those APIs.
+
+4) Mail Delivery Mechanism Allows Return-Path to be Set
 
 Bounce sets the Return-Path mail header to a different value than the From
 header. Not all modules that provide new options for sending mail (i.e. 
-implement a MailSystemInterface class) permit this, and some will ignore the
-Return-Path setting entirely. Some of the known modules are listed below:
+implement a MailSystemInterface class) permit this, and some ignore the
+Return-Path setting entirely. 
 
-Works:
-  Drupal core DefaultMailSystem (via sendmail, so not ideal)
-  ManyMail
-  Swift Mailer
+Again, modules that bypass hook_mail_alter() prevent Bounce from working, and
+that includes preventing Bounce from setting the necessary Return-Path header.
 
-Does not work:
-  Newsletter (uses SMTP Authentication Support)
-  PHPMailer (the module, not the library)
-  SMTP Authentication Support
-
-4) (Optional, but Very Much Recommended) Send Mail Using SMTP
+5) (Optional, but Very Much Recommended) Mail is Sent Using SMTP
 
 Ideally you should have your own mail server set up for your domain, and
-be sending all outgoing mail from your Drupal site through that server via
-a module that permits sending mail via SMTP. If you are not doing this,
-then you have far more serious issues with mail deliverability than Bounce
-can help you with - for example, sending from the Drupal server using sendmail
-on a Linux system cannot respond correctly to greylisting, which looks very
-much like a spam sending robot's behavior.
+the mail module you are using will send all outgoing mail from your Drupal site
+through that server via the SMTP protocol. If you are not doing this, then you 
+have far more serious issues with mail deliverability than Bounce can help you 
+with - for example, sending from the Drupal server using sendmail on a Linux 
+system cannot respond correctly to greylisting, which looks very much like a 
+spam sending robot's behavior.
+
+-- Mail Modules Known to Work or Not Work With Bounce --
+
+Working:
+  Drupal DefaultMailSystem (via sendmail, so not ideal)
+  Swift Mailer
+  
+Works if patched to allow setting of Return-Path:
+  PHPMailer, Patch: http://drupal.org/node/1505444
+  SMTP Authentication Support, Patch: http://drupal.org/node/1500296
+  
+Does not work because it bypasses hook_mail_alter():
+  ManyMail
+  
+Others:
+  Newsletter, uses SMTP Authentication Support
 
 -- Installation and Configuration --
 
