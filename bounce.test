@@ -185,8 +185,8 @@ class BounceTestCase extends DrupalWebTestCase {
   protected function runTestBounceEmailsFromText() {
     $text = 'email@example.com';
     $result = array('email@example.com');
-    $this->assertIdentical($result, _bounce_mails_from_text($text));
-    $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
+    $this->assertIdentical($result, bounce_mails_from_text($text));
+    $this->assertIdentical($result, bounce_unique_mails_from_text($text));
 
     $text = 'Mr. A <mra@example.com>, Mr. B <mrb@example.com>, moremail@example.com';
     $result = array(
@@ -194,13 +194,13 @@ class BounceTestCase extends DrupalWebTestCase {
       'mrb@example.com',
       'moremail@example.com',
     );
-    $this->assertIdentical($result, _bounce_mails_from_text($text));
-    $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
+    $this->assertIdentical($result, bounce_mails_from_text($text));
+    $this->assertIdentical($result, bounce_unique_mails_from_text($text));
 
     $text = 'notalegtimate@email@ and nor@is this';
     $result = array();
-    $this->assertIdentical($result, _bounce_mails_from_text($text));
-    $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
+    $this->assertIdentical($result, bounce_mails_from_text($text));
+    $this->assertIdentical($result, bounce_unique_mails_from_text($text));
 
     $text = 'Mr. A <mra@example.com>, Mr. A <mra@example.com>, Mr. B <mrb@example.com>';
     $result = array(
@@ -208,12 +208,12 @@ class BounceTestCase extends DrupalWebTestCase {
       'mra@example.com',
       'mrb@example.com',
     );
-    $this->assertIdentical($result, _bounce_mails_from_text($text));
+    $this->assertIdentical($result, bounce_mails_from_text($text));
     $result = array(
       'mra@example.com',
       'mrb@example.com',
     );
-    $this->assertIdentical($result, _bounce_unique_mails_from_text($text));
+    $this->assertIdentical($result, bounce_unique_mails_from_text($text));
   }
 
   /**

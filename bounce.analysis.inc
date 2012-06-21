@@ -356,7 +356,7 @@ function bounce_analysis_get_most_frequent_mail($report, $ignored_emails = array
   $counts = array();
   foreach ($report as $part) {
     if (is_string($part['data'])) {
-      $part_counts = array_count_values(_bounce_mails_from_text($part['data']));
+      $part_counts = array_count_values(bounce_mails_from_text($part['data']));
       if ($filter_emails) {
         $part_counts = array_intersect_key($part_counts, $filter_emails);
       }

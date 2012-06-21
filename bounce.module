@@ -646,8 +646,8 @@ function bounce_component_include($component) {
  * @return array
  *   An array listing the distinct emails matched, with no duplicates.
  */
-function _bounce_unique_mails_from_text($text) {
-  return array_values(array_unique(_bounce_mails_from_text($text)));
+function bounce_unique_mails_from_text($text) {
+  return array_values(array_unique(bounce_mails_from_text($text)));
 }
 
 /**
@@ -659,7 +659,7 @@ function _bounce_unique_mails_from_text($text) {
  * @return array
  *   An array of all the emails matched, which may include duplicates.
  */
-function _bounce_mails_from_text($text) {
+function bounce_mails_from_text($text) {
   $matches = array();
   // Matching emails reliably is very hard. See this monster, for example:
   // http://ex-parrot.com/~pdw/Mail-RFC822-Address.html
@@ -726,7 +726,7 @@ function bounce_mail_remove_blocked_addresses($to) {
   $addresses = explode(',', $to);
   $destinations = array();
   foreach ($addresses as $address) {
-    $emails = _bounce_unique_mails_from_text($address);
+    $emails = bounce_unique_mails_from_text($address);
     if ($emails) {
       $destinations[array_shift($emails)] = $address;
     }
@@ -781,21 +781,41 @@ function bounce_mail_alter(&$message) {
     $message['to'] = $to;
   }
 
-  // Extract emails from the "to" string.
-  $emails = _bounce_unique_mails_from_text($message['to']);
-
   // If there is more than one email then they all get the same header.
   // That makes it more of a pain to figure out which one generated a
   // non-delivery report later on, but oh well.
   $header_id_key = variable_get('bounce_mail_header_name', BOUNCE_DEFAULT_MAIL_HEADER_NAME);
   $header_id_value = _bounce_generate_uuid();
   $message['headers'][$header_id_key] = $header_id_value;
-  $data = array(
-    'header_id' => $header_id_value,
-    'created' => time(),
-  );
+
+  // Write one or more records of the sent mail, so that a non-delivery report
+  // can later be matched.
+  bounce_write_sent_mail_records($to, $header_id_value);
+}
+
+/**
+ * Write one or more sent mail records for a single outgoing email with one or
+ * more recipients.
+ *
+ * @param string $to
+ *   An email address, or possibly several email addresses in the standard
+ *   format. e.g. "me@example.com" or "Me <me@example.com>" or delimited
+ *   lists of such addresses.
+ * @param string $header_id_value
+ *   The header ID to assign to this email. If there is more than one email
+ *   then they all get the same header. That makes it more of a pain to figure
+ *   out which one generated a non-delivery report later on, but oh well.
+ */
+function bounce_write_sent_mail_records($to, $header_id_value) {
+  // Extract raw mails from the to string - i.e. "me@example.com" obtained from
+  // "Me <me@example.com>".
+  $emails = bounce_unique_mails_from_text($to);
   foreach ($emails as $email) {
-    $data['mail'] = $email;
+    $data = array(
+      'mail' => $email,
+      'header_id' => $header_id_value,
+      'created' => time(),
+    );
     drupal_write_record('bounce_sent', $data);
   }
 }
