@@ -273,6 +273,8 @@ If you are setting the header "x-my-unique-mail-id" in your outgoing mails
 then you will have to set the "bounce_mail_header_name" variable, either in
 code or configured via the general settings administration form.
 
+variable_set('bounce_mail_header_name', 'x-my-unique-mail-id');
+
 3) Tell Bounce about outgoing mail as it is sent
 
 Every time you send mail, you must call the following function in order to pass
