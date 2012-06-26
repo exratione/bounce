@@ -716,6 +716,9 @@ function _bounce_generate_uuid() {
 /**
  * Given an RFC 2822 set of addresses, remove those that are blocked.
  *
+ * This isn't fully compliant with RFC2822 - it doesn't deal with groups, for
+ * example, but then we don't expect to have to in this environment.
+ *
  * @param string $to
  *   The RFC 2822 set of emails to send to.
  *
@@ -724,6 +727,24 @@ function _bounce_generate_uuid() {
  */
 function bounce_mail_remove_blocked_addresses($to) {
   $addresses = explode(',', $to);
+  $blocked_addresses = bounce_determine_blocked_addresses($addresses);
+  return implode(',', array_diff($addresses, $blocked_addresses));
+}
+
+/**
+ * Determine which of the provided email addresses are blocked by Bounce.
+ * This works for plain email addresses or RFC 2822 formatted email
+ * addresses. e.g. "me@example.com", "Me <me@example.com>", etc.
+ *
+ * @param array $addresses
+ *   An array of RFC 2822 email addresses.
+ *
+ * @return array
+ *   An array containing the email addresses that are blocked by Bounce.
+ *   The emails will be returned in the same format that they were
+ *   supplied.
+ */
+function bounce_determine_blocked_addresses($addresses) {
   $destinations = array();
   foreach ($addresses as $address) {
     $emails = bounce_unique_mails_from_text($address);
@@ -736,10 +757,8 @@ function bounce_mail_remove_blocked_addresses($to) {
     ->condition('b.mail', array_keys($destinations), 'IN')
     ->execute()
     ->fetchCol();
-  foreach ($blocked_mails as $blocked_mail) {
-    unset($destinations[$blocked_mail]);
-  }
-  return implode(',', $destinations);
+  $blocked_destinations = array_intersect_key($destinations, array_flip($blocked_mails));
+  return array_values($blocked_destinations);
 }
 
 /*
@@ -790,35 +809,68 @@ function bounce_mail_alter(&$message) {
 
   // Write one or more records of the sent mail, so that a non-delivery report
   // can later be matched.
-  bounce_write_sent_mail_records($to, $header_id_value);
+  $mail_data = array();
+  $mail_data[] = array(
+    'mail' => $to,
+    'header_id' => $header_id_value,
+  );
+  bounce_record_sent_mails($mail_data);
 }
 
 /**
- * Write one or more sent mail records for a single outgoing email with one or
- * more recipients.
+ * Record a set of sent mails.
  *
- * @param string $to
- *   An email address, or possibly several email addresses in the standard
- *   format. e.g. "me@example.com" or "Me <me@example.com>" or delimited
- *   lists of such addresses.
- * @param string $header_id_value
- *   The header ID to assign to this email. If there is more than one email
- *   then they all get the same header. That makes it more of a pain to figure
- *   out which one generated a non-delivery report later on, but oh well.
+ * The provided data includes the email address and unique header ID for each
+ * sent mail, so that they can be identified later if a non-delivery report
+ * shows up.
+ *
+ * array(
+ *   'mail' => $email,
+ *   'header_id' => $header_id_value,
+ * );
+ *
+ * @param array $mail_data
+ *   An array of arrays, each subarray provided an email address and unique
+ *   header ID for a single outgoing mail.
+ *
  */
-function bounce_write_sent_mail_records($to, $header_id_value) {
-  // Extract raw mails from the to string - i.e. "me@example.com" obtained from
-  // "Me <me@example.com>".
-  $emails = bounce_unique_mails_from_text($to);
-  foreach ($emails as $email) {
-    $data = array(
-      'mail' => $email,
-      'header_id' => $header_id_value,
-      'created' => time(),
-    );
-    drupal_write_record('bounce_sent', $data);
+function bounce_record_sent_mails($mail_data) {
+  // Some of the addresses may be to multiple recipients, in which case they
+  // have to be split out, and gain a record each. If there is more than one
+  // email then they all get the same header ID. That makes it more of a pain
+  // to figure out which one generated a non-delivery report later on, but oh
+  // well.
+  $extra_mail_data = array();
+  $time = time();
+  foreach ($mail_data as &$mail) {
+    $mail['created'] = $time;
+    $emails = bounce_unique_mails_from_text($mail['mail']);
+    // Put the first raw address back in to this array.
+    $mail['mail'] = array_shift($emails);
+    // And then stack any others into the extra array, which we will merge
+    // in at the end.
+    foreach ($emails as $email) {
+      $extra_mail_data[] = array(
+        'created' => $time,
+        'mail' => $email,
+        'header_id' => $mail['header_id'],
+      );
+    }
   }
+
+  $mail_data = array_merge($mail_data, $extra_mail_data);
+
+  $query = db_insert('bounce_sent')
+    ->fields(array('mail', 'header_id', 'created'));
+  foreach ($mail_data as $mail) {
+    // Probably not a necessary check, but better safe than sorry.
+    if ($mail['mail']) {
+      $query->values($mail);
+    }
+  }
+  $query->execute();
 }
+
 
 /*
  -----------------------------------------------------------------------

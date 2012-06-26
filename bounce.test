@@ -151,6 +151,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->runTestAnalystIsAutoreply();
 
     // Simple needing-the-database not-quite-unit tests.
+    $this->runTestBounceDeterminedBlockedAddresses();
     $this->runTestBounceRemoveBlockedAddresses();
     $this->runTestHookUserLoad();
     $this->runTestDeletionOfOldData();
@@ -359,6 +360,38 @@ class BounceTestCase extends DrupalWebTestCase {
 
     $headers['x-autoreply'] = 'yes';
     $this->assertTrue(bounce_analysis_is_autoreply($headers));
+  }
+
+  /**
+   * Test determining which RFC 2822 address strings are blocked.
+   */
+  protected function runTestBounceDeterminedBlockedAddresses() {
+    $mails = array(
+      'Mr. A <mra@example.com>',
+      '3@example.com',
+      'To 2 <2@example.com>',
+      'moremail@example.com',
+    );
+    $result = array(
+      '3@example.com',
+      'To 2 <2@example.com>',
+    );
+    $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+
+    $mails = array(
+      'Mr. A <mra@example.com>',
+      '1@example.com',
+    );
+    $result = array(
+      '1@example.com',
+    );
+    $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+
+    $mails = array(
+      'Mr. A <mra@example.com>',
+    );
+    $result = array();
+    $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
   }
 
   /**
@@ -1185,6 +1218,18 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->drupalGet('admin/config/people/bounce/blocked');
     $this->assertRaw($email);
     $this->drupalLogout();
+
+    // Send a second mail, which should get shot down and blocked.
+    $context = array(
+      'recipient' => $email,
+      'subject' => 'test 2',
+      'message' => 'test 2',
+    );
+    system_send_email_action(NULL, $context);
+
+    // Check to see that only one mail made it out to this user.
+    $mails = $this->drupalGetMails(array('to' => $email));
+    $this->assertIdentical(count($mails), 1);
   }
 
 }

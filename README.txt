@@ -37,7 +37,7 @@ e.g. automatic responses sent to the account bounces@example.com. That
 account must be accessible via POP or IMAP protocols from the server
 hosting your Drupal site.
 
-3) Mail is Sent Through drupal_mail() or Something Very Similar
+3) Mail is Sent Through drupal_mail()
 
 For Bounce to know about outgoing mail, suitably alter it, and record the fact
 that it was sent, that mail must be sent through drupal_mail() - or at least
@@ -46,9 +46,10 @@ Bounce can do its work. Not all modules that provide new options for sending
 mail do this - some skip the implementation of a MailSystemInterface class and
 do not use the core Drupal mail APIs.
 
-Future versions of Bounce will offer ways to work with this sort of mail
-module, but as of now Bounce requires sent mail to go out via the core mail
-APIs or through modules that implement those APIs.
+Methods of sending mail that bypass hook_mail_alter() can still be used with
+Bounce, but will require a little work and additional code to integrate. See
+the Bounce documentation section on "Working With Bounce Without Using
+hook_mail_alter()" for instructions.
 
 4) Mail Delivery Mechanism Allows Return-Path to be Set
 
@@ -60,14 +61,14 @@ Return-Path setting entirely.
 Again, modules that bypass hook_mail_alter() prevent Bounce from working, and
 that includes preventing Bounce from setting the necessary Return-Path header.
 
-5) (Optional, but Very Much Recommended) Mail is Sent Using SMTP
+5) (Optional, but Highly Recommended) Mail Passes Through a Full Mail Server
 
 Ideally you should have your own mail server set up for your domain, and
 the mail module you are using will send all outgoing mail from your Drupal site
-through that server via the SMTP protocol. If you are not doing this, then you
-have far more serious issues with mail deliverability than Bounce can help you
-with - for example, sending from the Drupal server using sendmail on a Linux
-system cannot respond correctly to greylisting, which looks very much like a
+through that server. If you are not doing this, then you have far more serious
+issues with mail deliverability than Bounce can help you with - for example,
+sending from the Drupal server using sendmail on a Linux system cannot respond
+correctly to greylisting as a mail server can, which looks very much like a
 spam sending robot's behavior.
 
 -- Mail Modules Known to Work or Not Work With Bounce --
@@ -81,7 +82,7 @@ Works if patched to allow setting of Return-Path:
   SMTP Authentication Support, Patch: http://drupal.org/node/1500296
   Newsletter, uses SMTP Authentication Support
   
-Does not work because it bypasses hook_mail_alter():
+Requires integration to work, as it bypasses hook_mail_alter():
   ManyMail
 
 -- Installation and Configuration --
@@ -253,3 +254,46 @@ have no material effect.
 
 Use this hook to alter the analysis settled on for a particular
 non-delivery report.
+
+-- Working With Bounce Without Using hook_mail_alter() --
+
+So your method of sending mail bypasses drupal_mail() and hook_mail_alter()?
+You should still be able to use Bounce to manage non-delivery report tracking
+provided you do a little additional work in code.
+
+1) Add a unique identifier header to each outgoing mail
+
+How this is done is up to you. You can use any header key, and any form of
+unique ID provided it is no longer than 255 characters (i.e. it will fit
+into Bounce's schema).
+
+2) Let Bounce know about the unique identifier header key
+
+If you are setting the header "x-my-unique-mail-id" in your outgoing mails
+then you will have to set the "bounce_mail_header_name" variable, either in
+code or configured via the general settings administration form.
+
+3) Tell Bounce about outgoing mail as it is sent
+
+Every time you send mail, you must call the following function in order to pass
+to Bounce the email addresses you are sending to and the unique header IDs in
+each piece of outgoing mail:
+
+bounce_record_sent_mails($mail_data)
+ 
+The function is more efficient if you pass in information in batches, so if
+you send in batches then call it less frequently and with larger sets of 
+data.
+
+4) Ask Bounce which email addresses are blocked
+
+Before sending mail, ask Bounce which email addresses are blocked and should
+not be sent further mail by using this function. Given an array of addresses,
+it will return those that are blocked:
+
+bounce_determine_blocked_addresses($addresses)
+
+It is up to you to then remove these addresses and refrain from sending them
+mail. This function is more efficient if you pass in sets of addresses rather
+than one email address at a time, so if you send mail in batches than call this
+function once per batch to give it all of the addresses you intend to send to.
