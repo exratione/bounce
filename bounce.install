@@ -422,3 +422,37 @@ function bounce_uninstall() {
   variable_del('bounce_notify_user_message');
   variable_del('bounce_connector_class');
 }
+
+/**
+ * Update to configuration variables.
+ *
+ * The protocol definitions changed from [pop3, pop3s, imap, imaps] to
+ * [pop3, imap], and the 'bounce_connector_encryption' variable was added. The
+ * prior version could only be configured to use SSL, rather than TLS or SSL.
+ */
+function bounce_update_7100(&$sandbox) {
+  // First a quick paranoia check to make sure we're not trying to run an
+  // update twice. If there is a bounce_connector_encryption variable, then
+  // we're on a later version of the code.
+  $encryption = variable_get('bounce_connector_encryption', NULL);
+  if (!is_null($encryption)) {
+    return;
+  }
+
+  $old_protocol = variable_get('bounce_connector_protocol');
+  switch ($old_protocol) {
+    case 'pop3s':
+      variable_set('bounce_connector_protocol', 'pop3');
+      variable_set('bounce_connector_encryption', 'ssl');
+      break;
+
+    case 'imaps':
+      variable_set('bounce_connector_protocol', 'imap');
+      variable_set('bounce_connector_encryption', 'ssl');
+      break;
+
+    default:
+      variable_set('bounce_connector_encryption', '');
+      break;
+  }
+}
