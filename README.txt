@@ -105,7 +105,7 @@ and the following values in the Connector settings page:
 Server: mail.example.com
 Protocol: POP3
 Encryption: SSL
-Post: 995
+Port: 995
 Login: bounce
 Password: my_obscure_password
 
