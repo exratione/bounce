@@ -661,18 +661,12 @@ function bounce_unique_mails_from_text($text) {
  */
 function bounce_mails_from_text($text) {
   $matches = array();
-  // Matching emails reliably is very hard. See this monster, for example:
-  // http://ex-parrot.com/~pdw/Mail-RFC822-Address.html
+  // See here for a discussion of this email-matching regex:
+  // http://www.exratione.com/2012/09/what-constitutes-an-acceptable-email-regex/
   //
-  // Fortunately we just have to aim for 'good enough' here. This commented
-  // line works well for most non-unicode addresses (provided that the top
-  // level domain is in the 2-4 character range).
-  // preg_match_all('/([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})/i', $text, $matches);
-  //
-  // But for the sake of at least a little future-proofing, we'll use something
-  // capable of managing unicode as well. This will more readily pull in things
-  // that are not email addresses, but that should not be a problem in practice.
-  preg_match_all('/([\p{L}\p{N}._%-]+@[\p{L}\p{N}.-]+\.[\p{L}]+)/ui', $text, $matches);
+  // This will match some things that look like email addresses but are not
+  // email addresses, but that should not be a problem in practice.
+  preg_match_all('/\b([\w.%-]+@[\p{L}\p{M}\p{N}.-]+\.(\p{L}\p{M}*){2,6})\b/ui', $text, $matches);
   $mails = $matches[1];
   foreach ($mails as $index => $mail) {
     if (!valid_email_address($mail)) {
