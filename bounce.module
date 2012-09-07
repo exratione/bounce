@@ -666,7 +666,7 @@ function bounce_mails_from_text($text) {
   //
   // This will match some things that look like email addresses but are not
   // email addresses, but that should not be a problem in practice.
-  preg_match_all('/\b([\w.%-]+@[\p{L}\p{M}\p{N}.-]+\.(\p{L}\p{M}*){2,6})\b/ui', $text, $matches);
+  preg_match_all('/([^\p{Z}<]+@[\p{L}\p{M}\p{N}.-]+\.(\p{L}\p{M}*){2,6})(>|\p{Z}|$)/ui', $text, $matches);
   $mails = $matches[1];
   foreach ($mails as $index => $mail) {
     if (!valid_email_address($mail)) {
