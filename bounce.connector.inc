@@ -75,9 +75,24 @@ function bounce_connect() {
     'mail_part_size_limit' => variable_get('bounce_mail_part_size_limit_bytes'),
   );
   // Check to see that configuration exists - if not, do nothing.
-  foreach ($params as $value) {
-    if (!$value) {
-      return $reports;
+  foreach ($params as $name => $value) {
+    switch ($name) {
+      case "protocol":
+        if (!array_key_exists($value, bounce_connect_options_protocol())) {
+          return $reports;
+        }
+        break;
+
+      case "encryption":
+        if (!array_key_exists($value, bounce_connect_options_encryption())) {
+          return $reports;
+        }
+        break;
+
+      default:
+        if (!$value) {
+          return $reports;
+        }
     }
   }
 
@@ -115,6 +130,33 @@ function bounce_connect_validate($params) {
     $connector->logout();
   }
   return $validated;
+}
+
+/**
+ * Return select options for the connection protocol parameter.
+ *
+ * @return array
+ *   An options array.
+ */
+function bounce_connect_options_protocol() {
+  return array(
+    'pop3' => t('POP3'),
+    'imap' => t('IMAP'),
+  );
+}
+
+/**
+ * Return select options for the connection encryption parameter.
+ *
+ * @return array
+ *   An options array.
+ */
+function bounce_connect_options_encryption() {
+  return array(
+    '' => t('None'),
+    'tls' => t('TLS'),
+    'ssl' => t('SSL'),
+  );
 }
 
 /**
@@ -175,21 +217,14 @@ function bounce_connect_settings($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Protocol'),
     '#description' => t('The protocol used to connect to the mail server. Most mail servers support POP3 and IMAP.'),
-    '#options' => array(
-      'pop3' => t('POP3'),
-      'imap' => t('IMAP'),
-    ),
+    '#options' => bounce_connect_options_protocol(),
     '#default_value' => variable_get('bounce_connector_protocol', 'pop3'),
   );
   $form['connection']['bounce_connector_encryption'] = array(
     '#type' => 'select',
     '#title' => t('Encryption Mode'),
     '#description' => t('The encryption mode used to secure connections to the mail server. Most mail servers support TLS connections on port 110 for POP3 and 143 for IMAP, SSL connections on port 993 for IMAP and 995 for POP3, and do not accept plain text connections on any port.'),
-    '#options' => array(
-      '' => t('None'),
-      'tls' => t('TLS'),
-      'ssl' => t('SSL'),
-    ),
+    '#options' => bounce_connect_options_encryption(),
     '#default_value' => variable_get('bounce_connector_encryption', 'ssl'),
   );
   $form['connection']['bounce_connector_port'] = array(
