@@ -76,23 +76,28 @@ function bounce_connect() {
   );
   // Check to see that configuration exists - if not, do nothing.
   foreach ($params as $name => $value) {
+    $failed = false;
     switch ($name) {
       case "protocol":
         if (!array_key_exists($value, bounce_connect_options_protocol())) {
-          return $reports;
+          $failed = true;
         }
         break;
 
       case "encryption":
         if (!array_key_exists($value, bounce_connect_options_encryption())) {
-          return $reports;
+          $failed = true;
         }
         break;
 
       default:
         if (!$value) {
-          return $reports;
+          $failed = true;
         }
+    }
+    if ($failed) {
+      watchdog('bounce', 'Cannot connect to retrieve non-delivery reports, as "@name" parameter is invalid or missing.', array('@name' => $name), WATCHDOG_ERROR);
+      return $reports;
     }
   }
 
