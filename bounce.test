@@ -392,6 +392,21 @@ class BounceTestCase extends DrupalWebTestCase {
     );
     $result = array();
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+
+    // Check to see that we can deal with an empty imput.
+    $mails = array('');
+    $result = array();
+    $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+
+    // Check to see that we can deal with an empty imput.
+    $mails = array();
+    $result = array();
+    $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+
+    // Check to see that we can deal with a null imput.
+    $mails = NULL;
+    $result = array();
+    $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
   }
 
   /**
@@ -407,6 +422,16 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->assertIdentical($result, bounce_mail_remove_blocked_addresses($to));
 
     $to = '1@example.com';
+    $result = '';
+    $this->assertIdentical($result, bounce_mail_remove_blocked_addresses($to));
+
+    // Someone passes in an empty string. Bad. But we must still survive it.
+    $to = '';
+    $result = '';
+    $this->assertIdentical($result, bounce_mail_remove_blocked_addresses($to));
+
+    // Someone passes in a null value. Bad. But we must still survive it.
+    $to = NULL;
     $result = '';
     $this->assertIdentical($result, bounce_mail_remove_blocked_addresses($to));
   }

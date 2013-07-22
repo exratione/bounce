@@ -76,12 +76,12 @@ spam sending robot's behavior.
 Works:
   Drupal DefaultMailSystem (via sendmail, so not ideal)
   Swift Mailer
-  
+
 Works if patched to allow setting of Return-Path:
   PHPMailer, Patch: http://drupal.org/node/1505444
   SMTP Authentication Support, Patch: http://drupal.org/node/1500296
   Newsletter, uses SMTP Authentication Support
-  
+
 Requires integration to work, as it bypasses hook_mail_alter():
   ManyMail
 
@@ -282,9 +282,9 @@ to Bounce the email addresses you are sending to and the unique header IDs in
 each piece of outgoing mail:
 
 bounce_record_sent_mails($mail_data)
- 
+
 The function is more efficient if you pass in information in batches, so if
-you send in batches then call it less frequently and with larger sets of 
+you send in batches then call it less frequently and with larger sets of
 data.
 
 4) Ask Bounce which email addresses are blocked

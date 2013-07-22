@@ -721,6 +721,12 @@ function _bounce_generate_uuid() {
  */
 function bounce_mail_remove_blocked_addresses($to) {
   $addresses = explode(',', $to);
+  // Did some non-compliant code pass us an empty string or a null or some
+  // other not so useful value?
+  if (empty($addresses)) {
+    return '';
+  }
+  // Otherwise, onward.
   $blocked_addresses = bounce_determine_blocked_addresses($addresses);
   return implode(',', array_diff($addresses, $blocked_addresses));
 }
@@ -739,6 +745,13 @@ function bounce_mail_remove_blocked_addresses($to) {
  *   supplied.
  */
 function bounce_determine_blocked_addresses($addresses) {
+  // If passed something useless, such as NULL or an empty array, then skip
+  // and return an empty array.
+  if (!is_array($addresses) || empty($addresses)) {
+    return array();
+  }
+
+  // Otherwise, onward.
   $destinations = array();
   foreach ($addresses as $address) {
     $emails = bounce_unique_mails_from_text($address);
@@ -746,6 +759,14 @@ function bounce_determine_blocked_addresses($addresses) {
       $destinations[array_shift($emails)] = $address;
     }
   }
+
+  // It's quite possible for an array of alleged addresses passed in from
+  // third party code to have nothing in it that's recognizable as an email
+  // address. So $destinations might be empty. If so, return.
+  if (empty($destinations)) {
+    return array();
+  }
+
   $blocked_mails = db_select('bounce_blocked', 'b')
     ->fields('b', array('mail'))
     ->condition('b.mail', array_keys($destinations), 'IN')
