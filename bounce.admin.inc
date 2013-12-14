@@ -487,18 +487,23 @@ function bounce_admin_view_non_delivery_report_list() {
 
   $page = array();
   $page['list'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#empty' => t(
-      'No non-delivery reports have been received and successfully analyzed within the last @days.',
-      array(
-        '@days' => format_plural(
-          variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS),
-          '1 day',
-          '@count days'
-        ),
-      )
+    array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#empty' => t(
+        'No non-delivery reports have been received and successfully analyzed within the last @days.',
+        array(
+          '@days' => format_plural(
+            variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS),
+            '1 day',
+            '@count days'
+          ),
+        )
+      ),
+    ),
+    array(
+      '#theme' => 'pager',
     ),
   );
   return $page;
