@@ -75,12 +75,9 @@ spam sending robot's behavior.
 
 Works:
   Drupal DefaultMailSystem (via sendmail, so not ideal)
+  PHPMailer (7.x-3.x-dev)
+  SMTP Authentication Support (7.x-1.x-dev or 7.x-1.1 or later)
   Swift Mailer
-
-Works if patched to allow setting of Return-Path:
-  PHPMailer, Patch: http://drupal.org/node/1505444
-  SMTP Authentication Support, Patch: http://drupal.org/node/1500296
-  Newsletter, uses SMTP Authentication Support
 
 Requires integration to work, as it bypasses hook_mail_alter():
   ManyMail
