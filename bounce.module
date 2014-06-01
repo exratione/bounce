@@ -909,6 +909,10 @@ function bounce_bounce_code_type() {
     'title' => t('RFC 1893'),
     'description' => t('SMTP response codes from RFC 1893.'),
   );
+  $types['rfc5965'] = array(
+    'title' => t('RFC 5965'),
+    'description' => t('Response codes relating to Abuse Reporting Format notices from RFC 1893.'),
+  );
   $types['system'] = array(
     'title' => t('System'),
     'description' => t('Response codes assigned by the Bounce module.'),

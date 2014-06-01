@@ -128,10 +128,15 @@ function bounce_analyze_non_delivery_report($report) {
   foreach ($header_part['data'] as $name => $value) {
     $headers[drupal_strtolower($name)] = $value;
   }
+
   // Autoreplies are surprisingly common ('out of office, contact later').
   // People need to stop doing this; it just generates clutter.
   if (bounce_analysis_is_autoreply($headers)) {
     $analysis['code'] = 'autoreply';
+  }
+  // Check to see whether this a standard ARF (abuse reporting format) email.
+  else if (bounce_analysis_is_abuse_response_format($headers)) {
+    $analysis['code'] = 'abusereport';
   }
 
   /*
@@ -263,6 +268,33 @@ function bounce_analysis_is_autoreply($headers) {
 }
 
 /**
+ * Check to see if the email is an ARF (abuse reporting format) notice.
+ *
+ * For an overview of ARF, see:
+ * https://en.wikipedia.org/wiki/Abuse_Reporting_Format
+ * http://tools.ietf.org/html/rfc5965
+ *
+ * This looks at the headers only, and so cannot determine the type of the ARF,
+ * but that's acceptable as they are all bad news. The type and other details
+ * will be buried in the other mail parts.
+ *
+ * @param array $headers
+ *   A header associative array for a non-delivery report, values indexed by
+ *   names.
+ *
+ * @return boolean
+ *   TRUE if the headers indicate this to be an ARF notice.
+ */
+function bounce_analysis_is_abuse_response_format($headers) {
+  # Pretty unlikely, but paranoia never hurts.
+  if (!isset($headers['content-type'])) {
+    return false;
+  };
+
+  return preg_match('/report-type=feedback-report/i', $headers['content-type']);
+}
+
+/**
  * Determine a bounce code given text from a non-delivery report.
  *
  * This is a helper function to parse out an SMTP response code or other sort
@@ -270,7 +302,7 @@ function bounce_analysis_is_autoreply($headers) {
  * sophisticated approach. For a much more sophisticated consideration, you
  * might look at something like the BounceHandler class:
  *
- * http://www.phpclasses.org/browse/file/11665.html
+ * https://github.com/cfortune/PHP-Bounce-Handler
  *
  * But the contention here is that you can get by with comparatively little
  * sophistication if all you want is to avoid looking like a spam source.

@@ -364,6 +364,12 @@ function bounce_install() {
       'description' => $t('Mailbox permanently full'),
     ),
     array(
+      'code' => 'abusereport',
+      'type' => 'rfc5965',
+      'score' => 50,
+      'description' => $t('Abuse reporting format (ARF) notification.'),
+    ),
+    array(
       'code' => 'autoreply',
       'type' => 'system',
       'score' => 0,
@@ -456,3 +462,37 @@ function bounce_update_7100(&$sandbox) {
       break;
   }
 }
+
+/**
+ * An update to add a new response code.
+ */
+function bounce_update_7101(&$sandbox) {
+  // First a quick paranoia check to make sure we're not trying to run an
+  // update twice. If the new code is there, we've already updated.
+  $check = db_select('bounce_code_score', 'cs')
+    ->fields('cs', array('code', 'type', 'score', 'description'))
+    ->condition('code', 'abusereport', '=')
+    ->execute()
+    ->fetchAssoc();
+  if ($check) {
+    return;
+  }
+
+  $t = get_t();
+
+  $values = array(
+    array(
+      'code' => 'abusereport',
+      'type' => 'rfc5965',
+      'score' => 50,
+      'description' => $t('Abuse reporting format (ARF) notification.'),
+    ),
+  );
+  $query = db_insert('bounce_code_score')
+    ->fields(array('code', 'type', 'score', 'description'));
+  foreach ($values as $record) {
+    $query->values($record);
+  }
+  $query->execute();
+}
+

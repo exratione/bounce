@@ -149,6 +149,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->runTestAnalystIsCompleteAnalysis();
     $this->runTestAnalystCodeFromText();
     $this->runTestAnalystIsAutoreply();
+    $this->runTestAnalystIsAbuseReport();
 
     // Simple needing-the-database not-quite-unit tests.
     $this->runTestBounceDeterminedBlockedAddresses();
@@ -360,6 +361,21 @@ class BounceTestCase extends DrupalWebTestCase {
 
     $headers['x-autoreply'] = 'yes';
     $this->assertTrue(bounce_analysis_is_autoreply($headers));
+  }
+
+  /**
+   * Test to see that the mail header check for an abuse reporting format (ARF)
+   * notice is working.
+   */
+  protected function runTestAnalystIsAbuseReport() {
+    $headers = array(
+      'header1' => 'value1',
+      'header2' => 'value2',
+    );
+    $this->assertFalse(bounce_analysis_is_abuse_response_format($headers));
+
+    $headers['content-type'] = 'multipart/report; report-type=feedback-report; boundary="boundary"';
+    $this->assertTrue(bounce_analysis_is_abuse_response_format($headers));
   }
 
   /**
@@ -670,6 +686,28 @@ class BounceTestCase extends DrupalWebTestCase {
     $result = bounce_analyze_non_delivery_report($report);
     $this->assertIdentical($analysis, $result);
 
+    // Abuse report example, which won't find the email because
+    // vulnerable search for email is off by default.
+    $report = array();
+    $report[] = array(
+      'data' => array(
+        'header1' => 'value1',
+        'content-type' => 'multipart/report; report-type=feedback-report; boundary="boundary"',
+      ),
+      'charset' => 'utf-8',
+    );
+    $report[] = array(
+      'data' => 'blah blah analysis_test_1@example.com blah',
+      'charset' => 'utf-8',
+    );
+    $analysis = array(
+      'header_id' => '',
+      'code' => 'abusereport',
+      'mail' => '',
+    );
+    $result = bounce_analyze_non_delivery_report($report);
+    $this->assertIdentical($analysis, $result);
+
     // Turn on vulnerable search for emails.
     variable_set('bounce_analyst_use_vulnerable_email_search', TRUE);
 
@@ -689,6 +727,27 @@ class BounceTestCase extends DrupalWebTestCase {
     $analysis = array(
       'header_id' => '',
       'code' => 'autoreply',
+      'mail' => 'analysis_test_1@example.com',
+    );
+    $result = bounce_analyze_non_delivery_report($report);
+    $this->assertIdentical($analysis, $result);
+
+    // Abuse report example again, but this time picking up the mail.
+    $report = array();
+    $report[] = array(
+      'data' => array(
+        'header1' => 'value1',
+        'content-type' => 'multipart/report; report-type=feedback-report; boundary="boundary"',
+      ),
+      'charset' => 'utf-8',
+    );
+    $report[] = array(
+      'data' => 'blah blah analysis_test_1@example.com blah',
+      'charset' => 'utf-8',
+    );
+    $analysis = array(
+      'header_id' => '',
+      'code' => 'abusereport',
       'mail' => 'analysis_test_1@example.com',
     );
     $result = bounce_analyze_non_delivery_report($report);
