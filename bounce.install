@@ -397,7 +397,7 @@ function bounce_install() {
 }
 
 /**
- * Implements hook uninstall().
+ * Implements hook_uninstall().
  */
 function bounce_uninstall() {
   variable_del('bounce_analyst');
