@@ -208,8 +208,8 @@ function bounce_analyze_non_delivery_report($report) {
         $mail = bounce_analysis_get_most_frequent_mail($report, $ignored_mails, $mails);
         // Note that the return will be empty if the two highest counts are
         // tied - unlikely, but you never know.
-        if ($email) {
-          $analysis['mail'] = $email;
+        if ($mail) {
+          $analysis['mail'] = $mail;
         }
         // Return in either case.
         return $analysis;
