@@ -815,6 +815,80 @@ class BounceTestCase extends DrupalWebTestCase {
     );
     $result = bounce_analyze_non_delivery_report($report);
     $this->assertIdentical($analysis, $result);
+
+    // 5.1.3 from x-failed-recipients header.
+    $report = array();
+    $report[] = array(
+      'data' => array(
+        'x-failed-recipients' => 'analysis_test_1@example.com',
+      ),
+      'charset' => 'utf-8',
+    );
+    $report[] = array(
+      'data' => 'blah blah blah',
+      'charset' => 'utf-8',
+    );
+    $analysis = array(
+      'header_id' => '',
+      'code' => '5.1.3',
+      'mail' => '',
+    );
+    $result = bounce_analyze_non_delivery_report($report);
+    $this->assertIdentical($analysis, $result);
+
+    // 5.4.0 from DNS error notice in the body.
+    $report = array();
+    $report[] = array(
+      'data' => array(),
+      'charset' => 'utf-8',
+    );
+    $report[] = array(
+      'data' => 'blah blah DNS Error blah',
+      'charset' => 'utf-8',
+    );
+    $analysis = array(
+      'header_id' => '',
+      'code' => '5.4.0',
+      'mail' => '',
+    );
+    $result = bounce_analyze_non_delivery_report($report);
+    $this->assertIdentical($analysis, $result);
+
+    // 5.4.0 from DNS error notice in the body, again.
+    $report = array();
+    $report[] = array(
+      'data' => array(),
+      'charset' => 'utf-8',
+    );
+    $report[] = array(
+      'data' => 'blah blah Domain name not found blah',
+      'charset' => 'utf-8',
+    );
+    $analysis = array(
+      'header_id' => '',
+      'code' => '5.4.0',
+      'mail' => '',
+    );
+    $result = bounce_analyze_non_delivery_report($report);
+    $this->assertIdentical($analysis, $result);
+
+    // Expected failure to find a code and mail.
+    $report = array();
+    $report[] = array(
+      'data' => array(),
+      'charset' => 'utf-8',
+    );
+    $report[] = array(
+      'data' => 'blah blah blah',
+      'charset' => 'utf-8',
+    );
+    $analysis = array(
+      'header_id' => '',
+      'code' => '',
+      'mail' => '',
+    );
+    $result = bounce_analyze_non_delivery_report($report);
+    $this->assertIdentical($analysis, $result);
   }
 
   /**

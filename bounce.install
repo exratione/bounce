@@ -229,139 +229,152 @@ function bounce_install() {
       'code' => '421',
       'type' => 'rfc821',
       'score' => 0,
-      'description' => $t('Probably a greylist response'),
+      'description' => $t('Probably a greylist response.'),
     ),
     array(
       'code' => '422',
       'type' => 'rfc821',
       'score' => 0,
-      'description' => $t('Server out of space error'),
+      'description' => $t('Server out of space error.'),
     ),
     array(
       'code' => '450',
       'type' => 'rfc821',
       'score' => 0,
-      'description' => $t('Varying soft bounces'),
+      'description' => $t('Varying soft bounces.'),
     ),
     array(
       'code' => '451',
       'type' => 'rfc821',
       'score' => 0,
-      'description' => $t('Greylist response'),
+      'description' => $t('Greylist response.'),
     ),
     array(
       'code' => '452',
       'type' => 'rfc821',
       'score' => 50,
-      'description' => $t('Account temporarily out of space notice'),
+      'description' => $t('Account temporarily out of space notice.'),
     ),
     array(
       'code' => '454',
       'type' => 'rfc821',
       'score' => 0,
-      'description' => $t('Temporary server error'),
+      'description' => $t('Temporary server error.'),
     ),
     array(
       'code' => '500',
       'type' => 'rfc821',
       'score' => 25,
-      'description' => $t('Server error'),
+      'description' => $t('Server error.'),
     ),
     array(
       'code' => '501',
       'type' => 'rfc821',
       'score' => 25,
-      'description' => $t('Server error'),
+      'description' => $t('Server error.'),
     ),
     array(
       'code' => '502',
       'type' => 'rfc821',
       'score' => 25,
-      'description' => $t('Server error'),
+      'description' => $t('Server error.'),
     ),
     array(
       'code' => '503',
       'type' => 'rfc821',
       'score' => 25,
-      'description' => $t('Server error'),
+      'description' => $t('Server error.'),
     ),
     array(
       'code' => '504',
       'type' => 'rfc821',
       'score' => 25,
-      'description' => $t('Server error'),
+      'description' => $t('Server error.'),
     ),
     array(
       'code' => '550',
       'type' => 'rfc821',
       'score' => 50,
-      'description' => $t('Definitive hard bounce'),
+      'description' => $t('Definitive hard bounce.'),
     ),
     array(
       'code' => '551',
       'type' => 'rfc821',
       'score' => 50,
-      'description' => $t('Definitive hard bounce'),
+      'description' => $t('Definitive hard bounce.'),
     ),
     array(
       'code' => '552',
       'type' => 'rfc821',
       'score' => 50,
-      'description' => $t('Account permanently out of space notice'),
+      'description' => $t('Account permanently out of space notice.'),
     ),
     array(
       'code' => '553',
       'type' => 'rfc821',
       'score' => 50,
-      'description' => $t('Definitive hard bounce'),
+      'description' => $t('Definitive hard bounce.'),
     ),
     array(
       'code' => '554',
       'type' => 'rfc821',
       'score' => 50,
-      'description' => $t('Definitive hard bounce'),
+      'description' => $t('Definitive hard bounce.'),
     ),
     array(
       'code' => '4.1.1',
       'type' => 'rfc1893',
       'score' => 25,
-      'description' => $t('Temporarily no such mailbox'),
+      'description' => $t('Temporarily no such mailbox.'),
     ),
     array(
       'code' => '4.2.1',
       'type' => 'rfc1893',
       'score' => 25,
-      'description' => $t('Mailbox temporarily disabled'),
+      'description' => $t('Mailbox temporarily disabled.'),
     ),
     array(
       'code' => '4.2.2',
       'type' => 'rfc1893',
       'score' => 25,
-      'description' => $t('Mailbox temporarily full'),
+      'description' => $t('Mailbox temporarily full.'),
     ),
     array(
       'code' => '4.7.1',
       'type' => 'rfc1893',
       'score' => 0,
-      'description' => $t('Greylist response'),
+      'description' => $t('Greylist response.'),
     ),
     array(
       'code' => '5.1.1',
       'type' => 'rfc1893',
       'score' => 50,
-      'description' => $t('Permanently no such mailbox'),
+      'description' => $t('Permanently no such mailbox.'),
+    ),
+    array(
+      'code' => '5.1.3',
+      'type' => 'rfc1893',
+      'score' => 25,
+      'description' => $t('Failed recipient.'),
     ),
     array(
       'code' => '5.2.1',
       'type' => 'rfc1893',
       'score' => 50,
-      'description' => $t('Mailbox permanently disabled'),
+      'description' => $t('Mailbox permanently disabled.'),
     ),
     array(
       'code' => '5.2.2',
       'type' => 'rfc1893',
       'score' => 50,
-      'description' => $t('Mailbox permanently full'),
+      'description' => $t('Mailbox permanently full.'),
+    ),
+    array(
+      'code' => '5.4.0',
+      'type' => 'rfc1893',
+      // We don't want to block an address for a transient DNS error.
+      'score' => 15,
+      'description' => $t('DNS resolution failure for mail domain.'),
     ),
     array(
       'code' => 'abusereport',
@@ -496,3 +509,42 @@ function bounce_update_7101(&$sandbox) {
   $query->execute();
 }
 
+/**
+ * An update to add new response codes.
+ */
+function bounce_update_7102(&$sandbox) {
+  $t = get_t();
+
+  $codes = array(
+    array(
+      'code' => '5.1.3',
+      'type' => 'rfc1893',
+      'score' => 25,
+      'description' => $t('Failed recipient.'),
+    ),
+    array(
+      'code' => '5.4.0',
+      'type' => 'rfc1893',
+      'score' => 15,
+      'description' => $t('DNS resolution failure for mail domain.'),
+    ),
+  );
+
+  foreach ($codes as $code) {
+    // First a quick paranoia check to make sure we're not trying to run an
+    // update twice. If the new code is there, we've already updated.
+    $check = db_select('bounce_code_score', 'cs')
+      ->fields('cs', array('code', 'type', 'score', 'description'))
+      ->condition('code', $code['code'], '=')
+      ->execute()
+      ->fetchAssoc();
+    if ($check) {
+      continue;
+    }
+
+    $query = db_insert('bounce_code_score')
+      ->fields(array('code', 'type', 'score', 'description'));
+    $query->values($code);
+    $query->execute();
+  }
+}

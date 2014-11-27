@@ -159,6 +159,11 @@ function bounce_analyze_non_delivery_report($report) {
     }
   }
 
+  // Determine failed recipients.
+  if (!$analysis['code'] && bounce_analysis_has_failed_recipients($headers)) {
+    $analysis['code'] = '5.1.3';
+  }
+
   // No code? Then give up; not much to be done here. This is expected to
   // happen: you'd be surprised at the outright strange and irrelevant email
   // that turns up in an account that is only used as a Return-Path catchall.
@@ -268,6 +273,21 @@ function bounce_analysis_is_autoreply($headers) {
 }
 
 /**
+ * Check to see if the email provider added a header indicating one or more
+ * failed recipients. Google does this, for example.
+ *
+ * @param array $headers
+ *   A header associative array for a non-delivery report, values indexed by
+ *   names.
+ *
+ * @return boolean
+ *   TRUE if the headers contain failed recipients.
+ */
+function bounce_analysis_has_failed_recipients($headers) {
+  return isset($headers['x-failed-recipients']);
+}
+
+/**
  * Check to see if the email is an ARF (abuse reporting format) notice.
  *
  * For an overview of ARF, see:
@@ -358,6 +378,12 @@ function bounce_analysis_code_from_text($text) {
   // responses.
   if (preg_match_all($spam_match_regex, $text, $matches) > 1) {
     $code = 'spamfilter';
+  }
+
+  // Check for DNS Error if domain name could not be found. Some providers will
+  // give an error code, but Google annoyingly does not.
+  if (preg_match('/DNS Error|Domain name not found/i', $text)) {
+    $code = '5.4.0';
   }
 
   return $code;
