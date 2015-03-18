@@ -269,9 +269,9 @@ function bounce_admin_blocked($form, &$form_state) {
   else {
     // A form to list blocked mails by page.
     $header = array(
-      t('Mail'),
-      t('User'),
-      t('Blocked Timestamp'),
+      array('data' => t('Mail'), 'field' => 'mail', 'sort' => 'ASC'),
+      array('data' => t('User'), 'field' => 'uid'),
+      array('data' => t('Blocked Timestamp'), 'field' => 'created'),
       t('View Non-Delivery Reports'),
     );
     $query = db_select('bounce_blocked', 'b');
@@ -281,9 +281,10 @@ function bounce_admin_blocked($form, &$form_state) {
     }
     $result = $query->fields('b', array('blocked_id', 'mail', 'created'))
       ->fields('u', array('name', 'uid'))
-      ->orderBy('b.mail', 'ASC')
       ->extend('PagerDefault')
       ->limit(50)
+      ->extend('TableSort')
+      ->orderByHeader($header)
       ->execute()
       ->fetchAllAssoc('blocked_id', PDO::FETCH_ASSOC);
     $options = array();
@@ -447,12 +448,12 @@ function bounce_admin_unblock_mails($form, &$form_state) {
  */
 function bounce_admin_view_non_delivery_report_list() {
   $header = array(
-    t('Mail'),
-    t('User'),
-    t('Timestamp'),
-    t('Analyst'),
-    t('Code'),
-    t('Used to Block?'),
+    array('data' => t('Mail'), 'field' => 'mail', 'sort' => 'ASC'),
+    array('data' => t('User'), 'field' => 'uid'),
+    array('data' => t('Timestamp'), 'field' => 'created'),
+    array('data' => t('Analyst'), 'field' => 'analyst'),
+    array('data' => t('Code'), 'field' => 'code'),
+    array('data' => t('Used to Block?'), 'field' => 'status'),
     t('View Report'),
   );
   $rows = array();
@@ -467,9 +468,10 @@ function bounce_admin_view_non_delivery_report_list() {
     'created',
   ))
     ->fields('u', array('name', 'uid'))
-    ->orderBy('ndr.created', 'ASC')
     ->extend('PagerDefault')
     ->limit(50)
+    ->extend('TableSort')
+    ->orderByHeader($header)
     ->execute()
     ->fetchAllAssoc('report_id', PDO::FETCH_ASSOC);
   $options = array();
