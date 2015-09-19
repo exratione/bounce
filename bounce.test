@@ -154,7 +154,7 @@ class BounceTestCase extends DrupalWebTestCase {
     // Simple needing-the-database not-quite-unit tests.
     $this->runTestBounceDeterminedBlockedAddresses();
     $this->runTestBounceRemoveBlockedAddresses();
-    $this->runTestHookUserLoad();
+    $this->runTestBounceIsMailBlocked();
     $this->runTestDeletionOfOldData();
     $this->runTestBlockedMailNotSent();
     $this->runTestSentMailToDatabase();
@@ -455,11 +455,11 @@ class BounceTestCase extends DrupalWebTestCase {
   /**
    * Check to see if hook_user_load() is doing the right thing.
    */
-  protected function runTestHookUserLoad() {
-    $blocked = user_load_by_mail('1@example.com');
-    $this->assertTrue(isset($blocked->bounce_mail_blocked) && $blocked->bounce_mail_blocked === TRUE, '$account->bounce_mail_blocked is TRUE');
-    $unblocked = user_load($this->unblocked_user->uid);
-    $this->assertTrue(isset($unblocked->bounce_mail_blocked) && $unblocked->bounce_mail_blocked === FALSE, '$account->bounce_mail_blocked is FALSE');
+  protected function runTestBounceIsMailBlocked() {
+    $blocked = bounce_is_mail_blocked('1@example.com');
+    $this->assertTrue($blocked, 'bounce_is_mail_blocked is TRUE');
+    $unblocked = bounce_is_mail_blocked($this->unblocked_user->mail);
+    $this->assertFalse($unblocked, 'bounce_is_mail_blocked is FALSE');
   }
 
   /**
