@@ -178,6 +178,7 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->runTestConnector();
     $this->runTestProcessNonDeliveryReportQueue();
     $this->runTestBlocker();
+    $this->runTestOfBounceRunBlocker();
     $this->runTestCronToBlockMail();
   }
 
@@ -393,6 +394,10 @@ class BounceTestCase extends DrupalWebTestCase {
       'To 2 <2@example.com>',
     );
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+    // Check with blocking disabled.
+    variable_set('bounce_disable_mail_blocking', TRUE);
+    $this->assertIdentical(array(), bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', FALSE);
 
     $mails = array(
       'Mr. A <mra@example.com>',
@@ -402,27 +407,42 @@ class BounceTestCase extends DrupalWebTestCase {
       '1@example.com',
     );
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', TRUE);
+    $this->assertIdentical(array(), bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', FALSE);
 
     $mails = array(
       'Mr. A <mra@example.com>',
     );
     $result = array();
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', TRUE);
+    $this->assertIdentical(array(), bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', FALSE);
 
     // Check to see that we can deal with an empty imput.
     $mails = array('');
     $result = array();
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', TRUE);
+    $this->assertIdentical(array(), bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', FALSE);
 
     // Check to see that we can deal with an empty imput.
     $mails = array();
     $result = array();
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', TRUE);
+    $this->assertIdentical(array(), bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', FALSE);
 
     // Check to see that we can deal with a null imput.
     $mails = NULL;
     $result = array();
     $this->assertIdentical($result, bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', TRUE);
+    $this->assertIdentical(array(), bounce_determine_blocked_addresses($mails));
+    variable_set('bounce_disable_mail_blocking', FALSE);
   }
 
   /**
@@ -1253,11 +1273,20 @@ class BounceTestCase extends DrupalWebTestCase {
     $mail = $this->connector->generateSMTPNonDeliveryReport($smtp_code, $email);
     $this->connector->deliverMail($mail);
 
-    // This should return that single mail back and drop it into the queue.
+    $queue = DrupalQueue::get('bounce_non_delivery_report');
+
+    // First disable the connector and so this function call should do nothing.
+    variable_set('bounce_disable_connector', TRUE);
+    bounce_process_connection_queue_item(array());
+    // And so there should be nothing in the queue.
+    $this->assertIdentical((int) ($queue->numberOfItems()), 0);
+
+    // Now enable the connector, and this should return that single mail back
+    // and drop it into the queue.
+    variable_set('bounce_disable_connector', FALSE);
     bounce_process_connection_queue_item(array());
 
     // Examine the queue.
-    $queue = DrupalQueue::get('bounce_non_delivery_report');
     $this->assertIdentical((int) ($queue->numberOfItems()), 1);
 
     $item = $queue->claimItem();
@@ -1294,11 +1323,20 @@ class BounceTestCase extends DrupalWebTestCase {
     $mail = $this->connector->generateSMTPNonDeliveryReport($smtp_code, $email);
     $this->connector->deliverMail($mail);
 
-    // Call the processor for connections to the fake server: this should
-    // return that single mail back and drop it into the queue.
+    $queue = DrupalQueue::get('bounce_non_delivery_report');
+
+    // First disable the connector and so this function call should do nothing.
+    variable_set('bounce_disable_connector', TRUE);
+    bounce_process_connection_queue_item(array());
+    // And so there should be nothing in the queue.
+    $this->assertIdentical((int) ($queue->numberOfItems()), 0);
+
+    // Now enable the connector, and call the processor for connections to the
+    // fake server: this should return that single mail back and drop it into
+    // the queue.
+    variable_set('bounce_disable_connector', FALSE);
     bounce_process_connection_queue_item(array());
 
-    $queue = DrupalQueue::get('bounce_non_delivery_report');
     $this->assertIdentical((int) ($queue->numberOfItems()), 1);
     $item = $queue->claimItem();
     $report = $item->data;
@@ -1309,6 +1347,20 @@ class BounceTestCase extends DrupalWebTestCase {
     $this->assertIdentical($report[1]['data'], $mail['parts'][1]['data']);
     $this->assertIdentical($report[2]['data'], $mail['parts'][2]['data']);
 
+    // First disable the analyst, and so this function call should do nothing.
+    variable_set('bounce_disable_analyst', TRUE);
+    bounce_process_non_delivery_report_queue_item($report);
+
+    // Check the database to see that no report was added.
+    $row = db_select('bounce_non_delivery_report', 'ndr')
+      ->condition('ndr.mail', $email, '=')
+      ->fields('ndr', array('mail', 'code'))
+      ->execute()
+      ->fetch(PDO::FETCH_ASSOC);
+    $this->assertIdentical($row, FALSE);
+
+    // Now enable the analyst and run the analysis.
+    variable_set('bounce_disable_analyst', FALSE);
     bounce_process_non_delivery_report_queue_item($report);
 
     // So now there should be a recorded and analyzed non-delivery report for
@@ -1329,6 +1381,71 @@ class BounceTestCase extends DrupalWebTestCase {
     // bounce_non_delivery_report that should be enough to register as a block.
     $mails = bounce_blocked();
     $this->assertTrue(in_array('block_this_1@example.com', $mails));
+  }
+
+  /**
+   * Test the bounce.module bounce_run_blocker function, which includes a check
+   * on whether the blocker is enabled.
+   *
+   * By the time this runs, the prior web settings form tests will have left
+   * enough configuration filled in for the various cron-called configuration
+   * checks to pass, and let the functionality be exercised.
+   */
+  protected function runTestOfBounceRunBlocker() {
+    $email = 'block_this_5@example.com';
+
+    // Send a mail so that it ends up in bounce_sent as a sent record.
+    $context = array(
+      'recipient' => $email,
+      'subject' => 'test 1',
+      'message' => 'test 1',
+    );
+    system_send_email_action(NULL, $context);
+
+    // Deliver a fake non-delivery report message via the connector test class.
+    $smtp_code = '550';
+    $this->connector->deliverMail($this->connector->generateSMTPNonDeliveryReport($smtp_code, $email));
+
+    // Get the non-delivery report into the database.
+    bounce_process_connection_queue_item(array());
+    $queue = DrupalQueue::get('bounce_non_delivery_report');
+    $item = $queue->claimItem();
+    $report = $item->data;
+    $queue->deleteItem($item);
+    bounce_process_non_delivery_report_queue_item($report);
+
+    // So now there should be a recorded and analyzed non-delivery report for
+    // this mail.
+    $row = db_select('bounce_non_delivery_report', 'ndr')
+      ->condition('ndr.mail', $email, '=')
+      ->fields('ndr', array('mail', 'code'))
+      ->execute()
+      ->fetch(PDO::FETCH_ASSOC);
+    $this->assertIdentical($row, array('mail' => $email, 'code' => $smtp_code));
+
+    // Now turn off the blocker and run it, which should have no effect.
+    variable_set('bounce_disable_blocker', TRUE);
+    bounce_run_blocker();
+
+    // So the mail should not be in the database.
+    $count = db_select('bounce_blocked')
+      ->condition('mail', $email, '=')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    $this->assertIdentical($count, '0');
+
+    // Now turn on and run the blocker.
+    variable_set('bounce_disable_blocker', FALSE);
+    bounce_run_blocker();
+
+    // So the mail should now be in the database.
+    $count = db_select('bounce_blocked')
+      ->condition('mail', $email, '=')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    $this->assertIdentical($count, '1');
   }
 
   /**

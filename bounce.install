@@ -428,6 +428,10 @@ function bounce_uninstall() {
   variable_del('bounce_connector_protocol');
   variable_del('bounce_connector_encryption');
   variable_del('bounce_connector_timeout');
+  variable_del('bounce_disable_analyst');
+  variable_del('bounce_disable_blocker');
+  variable_del('bounce_disable_connector');
+  variable_del('bounce_disable_mail_blocking');
   variable_del('bounce_error_on_password_reset');
   variable_del('bounce_error_on_password_reset_message');
   variable_del('bounce_error_on_registration');

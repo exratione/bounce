@@ -301,25 +301,52 @@ function bounce_cron_queue_info() {
  * Implements hook_cron().
  */
 function bounce_cron() {
-  // Don't run unless the install is complete; all sorts of mischief can
-  // happen.
+  // Don't run unless the install is complete; all sorts of mischief can happen.
   if (variable_get('install_task') != 'done') {
     return;
   }
 
-  /*
-  ---------------------------------------------
-  1) Clear out old data.
-  ---------------------------------------------
-  */
-
+  // 1) Clear out old data.
   bounce_delete_old_data();
 
-  /*
-  ---------------------------------------------
-  2) Block email addresses where necessary
-  ---------------------------------------------
-  */
+  // 2) Block email addresses where necessary.
+  bounce_run_blocker();
+
+  // 3) Add a queue item to connect to the mail server.
+  $queue = DrupalQueue::get('bounce_connection');
+  $queue->createItem(array());
+}
+
+/**
+ * Remove old records of sent mail and non-delivery reports.
+ */
+function bounce_delete_old_data() {
+  // Delete old sent mail records - very straightforward.
+  $age_in_seconds = variable_get('bounce_max_sent_age_days', BOUNCE_DEFAULT_MAX_SENT_AGE_DAYS) * 86400;
+  $time = time() - $age_in_seconds;
+  db_delete('bounce_sent')
+    ->condition('created', $time, '<')
+    ->execute();
+
+  // Delete old non-delivery reports. This is a little more complex. We want to
+  // keep non-delivery reports that were used to block an email address, but
+  // only if the email address is still blocked.
+  $age_in_seconds = variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS) * 86400;
+  $time = time() - $age_in_seconds;
+  db_delete('bounce_non_delivery_report')
+    ->condition('created', $time, '<')
+    ->where('status = :status OR NOT EXISTS (SELECT 1 FROM {bounce_blocked} b WHERE b.mail = {bounce_non_delivery_report}.mail)', array(':status' => BOUNCE_NDR_STATUS_UNUSED))
+    ->execute();
+}
+
+/**
+ * Run the blocker component process.
+ */
+function bounce_run_blocker() {
+  // Only run the blocker if it is not disabled.
+  if (variable_get('bounce_disable_blocker', FALSE)) {
+    return;
+  }
 
   // Start by obtaining the blocker.
   $blocker = variable_get('bounce_blocker', BOUNCE_DEFAULT_BLOCKER);
@@ -363,37 +390,6 @@ function bounce_cron() {
       module_invoke_all('bounce_mails_blocked', $mails);
     }
   }
-
-  /*
-  ----------------------------------------------
-  3) Add a queue item to connect to the mail server
-  ----------------------------------------------
-  */
-
-  $queue = DrupalQueue::get('bounce_connection');
-  $queue->createItem(array());
-}
-
-/**
- * Remove old records of sent mail and non-delivery reports.
- */
-function bounce_delete_old_data() {
-  // Delete old sent mail records - very straightforward.
-  $age_in_seconds = variable_get('bounce_max_sent_age_days', BOUNCE_DEFAULT_MAX_SENT_AGE_DAYS) * 86400;
-  $time = time() - $age_in_seconds;
-  db_delete('bounce_sent')
-    ->condition('created', $time, '<')
-    ->execute();
-
-  // Delete old non-delivery reports. This is a little more complex. We want to
-  // keep non-delivery reports that were used to block an email address, but
-  // only if the email address is still blocked.
-  $age_in_seconds = variable_get('bounce_max_report_age_days', BOUNCE_DEFAULT_MAX_REPORT_AGE_DAYS) * 86400;
-  $time = time() - $age_in_seconds;
-  db_delete('bounce_non_delivery_report')
-    ->condition('created', $time, '<')
-    ->where('status = :status OR NOT EXISTS (SELECT 1 FROM {bounce_blocked} b WHERE b.mail = {bounce_non_delivery_report}.mail)', array(':status' => BOUNCE_NDR_STATUS_UNUSED))
-    ->execute();
 }
 
 /**
@@ -404,6 +400,11 @@ function bounce_delete_old_data() {
  * queue, and delete them from the server.
  */
 function bounce_process_connection_queue_item($item) {
+  // If the connector is disabled, then skip this invocation.
+  if (variable_get('bounce_disable_connector', FALSE)) {
+    return;
+  }
+
   // Obtain the connector.
   $connector = variable_get('bounce_connector', BOUNCE_DEFAULT_CONNECTOR);
   $connectors = bounce_component_definitions('connector');
@@ -461,6 +462,11 @@ function bounce_process_connection_queue_item($item) {
  *   The non-delivery report email data.
  */
 function bounce_process_non_delivery_report_queue_item($report) {
+  // If analysis is disabled, then skip this invocation.
+  if (variable_get('bounce_disable_analyst', FALSE)) {
+    return;
+  }
+
   // Obtain the connector.
   $analyst = variable_get('bounce_analyst', BOUNCE_DEFAULT_ANALYST);
   $analysts = bounce_component_definitions('analyst');
@@ -745,6 +751,11 @@ function bounce_mail_remove_blocked_addresses($to) {
  *   supplied.
  */
 function bounce_determine_blocked_addresses($addresses) {
+  // If mail blocking is disabled, then skip this invocation.
+  if (variable_get('bounce_disable_mail_blocking', FALSE)) {
+    return array();
+  }
+
   // If passed something useless, such as NULL or an empty array, then skip
   // and return an empty array.
   if (!is_array($addresses) || empty($addresses)) {
@@ -885,7 +896,6 @@ function bounce_record_sent_mails($mail_data) {
   }
   $query->execute();
 }
-
 
 /*
  -----------------------------------------------------------------------
